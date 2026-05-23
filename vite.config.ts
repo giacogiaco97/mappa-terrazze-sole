@@ -9,7 +9,8 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // 'prompt' invece di 'autoUpdate' per dare il controllo all'utente via UpdatePrompt.
+      registerType: 'prompt',
       includeAssets: ['favicon.ico', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-512-maskable.png'],
       manifest: {
         name: 'Mappa delle terrazze al sole',

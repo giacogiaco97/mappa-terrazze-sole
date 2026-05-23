@@ -10,7 +10,7 @@ const POIS_IN = 'data-raw/osm-pois.raw.json';
 const OUT_DIR = 'public/data';
 const BUILDINGS_DIR = `${OUT_DIR}/buildings`;
 const GRID_STEP = 0.01; // ~1 km
-const POI_MATCH_RADIUS_M = 30;
+const POI_MATCH_RADIUS_M = 50;
 
 const BCN_BBOX: [number, number, number, number] = [2.07, 41.32, 2.23, 41.47];
 const CITY = 'Barcelona';
@@ -31,8 +31,9 @@ async function main(): Promise<void> {
   const tRaw = JSON.parse(await readFile(TERRACES_IN, 'utf-8')) as { terraces: Terrace[] };
   let terraces: Terrace[] = tRaw.terraces.map((t) => ({
     ...t,
-    lat: Math.round(t.lat * 1e6) / 1e6,
-    lng: Math.round(t.lng * 1e6) / 1e6,
+    // 5 decimali = ~1 m di precisione, sufficiente per il calcolo del sole.
+    lat: Math.round(t.lat * 1e5) / 1e5,
+    lng: Math.round(t.lng * 1e5) / 1e5,
   }));
 
   // Arricchimento: nome commerciale dal POI OSM più vicino.
@@ -57,8 +58,17 @@ async function main(): Promise<void> {
   await rm(OUT_DIR, { recursive: true, force: true });
   await mkdir(BUILDINGS_DIR, { recursive: true });
 
-  // Scrive terraces.json
-  await writeFile(`${OUT_DIR}/terraces.json`, JSON.stringify(terraces));
+  // Scrive terraces.json: omette campi mai usati al runtime (chairs, surfaceSqM)
+  const runtime = terraces.map((tr) => ({
+    id: tr.id,
+    name: tr.name,
+    address: tr.address,
+    lat: tr.lat,
+    lng: tr.lng,
+    tables: tr.tables,
+    neighborhood: tr.neighborhood,
+  }));
+  await writeFile(`${OUT_DIR}/terraces.json`, JSON.stringify(runtime));
 
   // Suddivide edifici in griglia
   const chunks = chunkByGrid(buildings, GRID_STEP);

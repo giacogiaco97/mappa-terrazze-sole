@@ -8,6 +8,8 @@ import TerraceList from './components/TerraceList.js';
 import TerraceCard from './components/TerraceCard.js';
 import GeolocateButton from './components/GeolocateButton.js';
 import CreditsButton from './components/CreditsButton.js';
+import Onboarding from './components/Onboarding.js';
+import UpdatePrompt from './components/UpdatePrompt.js';
 import { useGeolocation } from './lib/use-geolocation.js';
 import { useUrlSync } from './lib/use-url-sync.js';
 import { useStore } from './store/use-store.js';
@@ -118,6 +120,8 @@ export default function App() {
       <TerraceCard />
       <GeolocateButton map={map} />
       <CreditsButton />
+      <Onboarding />
+      <UpdatePrompt />
     </div>
   );
 }

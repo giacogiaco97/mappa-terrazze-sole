@@ -5,9 +5,11 @@ export type Terrace = {
   lat: number;
   lng: number;
   tables: number;
-  chairs: number;
-  surfaceSqM: number;
   neighborhood: string;
+  /** Solo backend/pipeline: non serializzato in terraces.json runtime. */
+  chairs?: number;
+  /** Solo backend/pipeline: non serializzato in terraces.json runtime. */
+  surfaceSqM?: number;
 };
 
 export type Building = {

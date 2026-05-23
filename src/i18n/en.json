@@ -23,5 +23,14 @@
   "themeToggle": "Theme",
   "themeAuto": "Auto",
   "themeLight": "Light",
-  "themeDark": "Dark"
+  "themeDark": "Dark",
+  "onboardingTitle": "Welcome!",
+  "onboardingIntro": "Find sunny terraces in Barcelona in real time.",
+  "legendSun": "Orange = sunny now",
+  "legendShade": "Blue = in shade",
+  "legendNight": "Grey = the sun has set",
+  "onboardingSliderHint": "Drag the time slider at the top to see how shadows change.",
+  "onboardingCta": "Get started",
+  "updateAvailable": "New version available",
+  "updateApply": "Update"
 }

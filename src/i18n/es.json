@@ -23,5 +23,14 @@
   "themeToggle": "Tema",
   "themeAuto": "Automático",
   "themeLight": "Claro",
-  "themeDark": "Oscuro"
+  "themeDark": "Oscuro",
+  "onboardingTitle": "¡Bienvenido!",
+  "onboardingIntro": "Encuentra terrazas al sol en Barcelona en tiempo real.",
+  "legendSun": "Naranja = al sol ahora",
+  "legendShade": "Azul = en sombra",
+  "legendNight": "Gris = el sol ya se puso",
+  "onboardingSliderHint": "Arrastra el control de tiempo arriba para ver cómo cambian las sombras.",
+  "onboardingCta": "Empezar",
+  "updateAvailable": "Nueva versión disponible",
+  "updateApply": "Actualizar"
 }

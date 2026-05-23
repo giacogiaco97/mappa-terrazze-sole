@@ -3,7 +3,7 @@ import { sortTerracesByDistance } from '../sort-terraces.js';
 import type { Terrace } from '../../types/index.js';
 
 const mk = (id: string, lat: number, lng: number): Terrace => ({
-  id, name: id, address: '', lat, lng, tables: 0, chairs: 0, surfaceSqM: 0, neighborhood: '',
+  id, name: id, address: '', lat, lng, tables: 0, neighborhood: '',
 });
 
 describe('sortTerracesByDistance', () => {

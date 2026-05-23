@@ -9,10 +9,12 @@ const BBOX = '41.32,2.07,41.47,2.23'; // Barcellona generosa, coerente con fetch
 const QUERY = `
 [out:json][timeout:120];
 (
-  node["amenity"~"^(restaurant|bar|cafe|pub|fast_food|biergarten|ice_cream|food_court)$"]["name"](${BBOX});
-  way["amenity"~"^(restaurant|bar|cafe|pub|fast_food|biergarten|ice_cream|food_court)$"]["name"](${BBOX});
-  node["shop"~"^(bakery|coffee|deli|pastry|confectionery)$"]["name"](${BBOX});
-  way["shop"~"^(bakery|coffee|deli|pastry|confectionery)$"]["name"](${BBOX});
+  node["amenity"~"^(restaurant|bar|cafe|pub|fast_food|biergarten|ice_cream|food_court|ice_cream_parlour|nightclub)$"]["name"](${BBOX});
+  way["amenity"~"^(restaurant|bar|cafe|pub|fast_food|biergarten|ice_cream|food_court|ice_cream_parlour|nightclub)$"]["name"](${BBOX});
+  node["shop"~"^(bakery|coffee|deli|pastry|confectionery|chocolate|wine|alcohol)$"]["name"](${BBOX});
+  way["shop"~"^(bakery|coffee|deli|pastry|confectionery|chocolate|wine|alcohol)$"]["name"](${BBOX});
+  node["tourism"~"^(hotel|hostel|guest_house)$"]["name"](${BBOX});
+  way["tourism"~"^(hotel|hostel|guest_house)$"]["name"](${BBOX});
 );
 out center tags;
 `.trim();
@@ -46,7 +48,7 @@ function elementToPoi(el: OverpassElement): RawPoi | null {
   const lat = el.type === 'node' ? el.lat : el.center?.lat;
   const lng = el.type === 'node' ? el.lon : el.center?.lon;
   if (typeof lat !== 'number' || typeof lng !== 'number') return null;
-  const kind = tags.amenity ?? tags.shop ?? 'other';
+  const kind = tags.amenity ?? tags.shop ?? tags.tourism ?? 'other';
   return {
     id: `${el.type[0]}${el.id}`,
     name: name.trim(),

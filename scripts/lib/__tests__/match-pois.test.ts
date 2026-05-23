@@ -5,7 +5,7 @@ import type { Terrace } from '../../../src/types/index.js';
 
 const mkT = (id: string, lat: number, lng: number, name = id): Terrace => ({
   id, name, address: name, lat, lng,
-  tables: 0, chairs: 0, surfaceSqM: 0, neighborhood: '',
+  tables: 0, neighborhood: '',
 });
 const mkP = (id: string, lat: number, lng: number, name: string, kind = 'restaurant'): RawPoi => ({
   id, lat, lng, name, kind,

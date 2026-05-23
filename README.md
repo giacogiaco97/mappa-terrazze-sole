@@ -32,3 +32,23 @@ Test:
 ```bash
 npm test
 ```
+
+## Sviluppo locale
+
+```bash
+npm install
+npm run dev
+```
+
+Aperto su `http://localhost:5180/`.
+
+## Deploy
+
+Il workflow `.github/workflows/deploy-pages.yml` pubblica automaticamente l'app su GitHub Pages a ogni push su `main`.
+
+**Setup iniziale (una tantum):**
+1. Push del repo su GitHub.
+2. Settings → Pages → Source = "GitHub Actions".
+3. Al primo push su `main`, il workflow esegue test + build + deploy.
+
+URL pubblico: `https://<utente>.github.io/<repo>/`.

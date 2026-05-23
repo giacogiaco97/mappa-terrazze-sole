@@ -10,5 +10,8 @@
   "geoDenied": "Location permission denied",
   "outsideBcn": "We only cover Barcelona for now",
   "night": "The sun has set",
-  "credits": "Data: Open Data BCN · OpenStreetMap · OpenFreeMap"
+  "credits": "Data: Open Data BCN · OpenStreetMap · OpenFreeMap",
+  "locateMe": "My location",
+  "close": "Close",
+  "creditsTitle": "Credits"
 }

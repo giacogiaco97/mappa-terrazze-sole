@@ -37,9 +37,10 @@ export default function BottomSheet({ collapsedLabel, children }: Props) {
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
-        aria-label="toggle sheet"
+        aria-label={collapsedLabel}
+        aria-expanded={expanded}
       >
-        <span className="bottom-sheet__bar" />
+        <span className="bottom-sheet__bar" aria-hidden="true" />
         <span className="bottom-sheet__label">{collapsedLabel}</span>
       </button>
       <div className="bottom-sheet__content">{children}</div>

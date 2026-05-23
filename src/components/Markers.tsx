@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import maplibregl, { Map as MLMap } from 'maplibre-gl';
+import type { Map as MLMap, GeoJSONSource } from 'maplibre-gl';
 import { useStore, type TerraceStatus } from '../store/use-store.js';
 
 const COLORS: Record<TerraceStatus, string> = {
@@ -30,7 +30,7 @@ export default function Markers({ map }: Props) {
       }));
       const geojson = { type: 'FeatureCollection' as const, features };
 
-      const existing = map.getSource(sourceId) as maplibregl.GeoJSONSource | undefined;
+      const existing = map.getSource(sourceId) as GeoJSONSource | undefined;
       if (existing) {
         existing.setData(geojson);
         return;

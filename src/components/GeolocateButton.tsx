@@ -1,5 +1,6 @@
 import { useStore } from '../store/use-store.js';
 import type { Map as MLMap } from 'maplibre-gl';
+import { t } from '../i18n/i18n.js';
 import '../styles/geolocate.css';
 
 type Props = { map: MLMap | null };
@@ -17,5 +18,14 @@ export default function GeolocateButton({ map }: Props) {
       });
     }
   };
-  return <button className="geolocate-btn" onClick={onClick} aria-label="locate me">📍</button>;
+  return (
+    <button
+      className="geolocate-btn"
+      onClick={onClick}
+      aria-label={t('locateMe')}
+      title={t('locateMe')}
+    >
+      <span aria-hidden="true">📍</span>
+    </button>
+  );
 }

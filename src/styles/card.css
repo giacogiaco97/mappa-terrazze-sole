@@ -1,0 +1,23 @@
+.card {
+  position: absolute;
+  left: 16px; right: 16px; bottom: 96px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  padding: 16px;
+  z-index: 6;
+}
+.card__close { position: absolute; top: 8px; right: 8px; background: transparent; border: 0; font-size: 24px; cursor: pointer; padding: 4px 8px; line-height: 1; }
+.card__title { margin: 0 0 4px; font-size: 18px; padding-right: 32px; }
+.card__address { margin: 0 0 12px; color: #666; font-size: 13px; }
+.card__status { margin: 6px 0; font-size: 15px; font-weight: 600; }
+.card__status--sun { color: #b06b00; }
+.card__status--shade { color: #244a78; }
+.card__status--closed { color: #555; }
+.card__until { font-size: 14px; color: #b06b00; margin: 4px 0; }
+.card__walk { font-size: 13px; color: #555; margin: 4px 0 12px; }
+.card__cta {
+  display: block; text-align: center;
+  background: #f5a623; color: white; text-decoration: none;
+  padding: 12px; border-radius: 12px; font-weight: 600;
+}

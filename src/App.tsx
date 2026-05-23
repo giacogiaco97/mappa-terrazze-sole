@@ -5,6 +5,7 @@ import Markers from './components/Markers.js';
 import TimeSlider from './components/TimeSlider.js';
 import BottomSheet from './components/BottomSheet.js';
 import TerraceList from './components/TerraceList.js';
+import TerraceCard from './components/TerraceCard.js';
 import { useGeolocation } from './lib/use-geolocation.js';
 import { useStore } from './store/use-store.js';
 import { loadTerraces, loadMeta, loadBuildingChunk, cellsForBbox } from './lib/data-loader.js';
@@ -15,11 +16,12 @@ import type { Building } from './types/index.js';
 
 export default function App() {
   const [map, setMap] = useState<MLMap | null>(null);
-  const [, setSelectedId] = useState<string | null>(null);
   const geo = useGeolocation();
   const setTerraces = useStore((s) => s.setTerraces);
   const setStates = useStore((s) => s.setStates);
   const setUserPos = useStore((s) => s.setUserPos);
+  const setSelectedId = useStore((s) => s.setSelectedId);
+  const setBuildingIndex = useStore((s) => s.setBuildingIndex);
   const now = useStore((s) => s.now);
   const states = useStore((s) => s.states);
 
@@ -53,12 +55,13 @@ export default function App() {
       const index = buildBuildingIndex(allBuildings);
       if (cancelled) return;
 
+      setBuildingIndex(index);
       const newStates = computeAllStates(list, now, index);
       setStates(newStates);
     };
     map.once('idle', run);
     return () => { cancelled = true; };
-  }, [map, now, setTerraces, setStates]);
+  }, [map, now, setTerraces, setStates, setBuildingIndex]);
 
   const sunnyCount = Object.values(states).filter((s) => s === 'sun').length;
 
@@ -70,6 +73,7 @@ export default function App() {
       <BottomSheet collapsedLabel={t('sunnyNearby', { count: sunnyCount })}>
         <TerraceList onSelectTerrace={setSelectedId} />
       </BottomSheet>
+      <TerraceCard />
     </div>
   );
 }

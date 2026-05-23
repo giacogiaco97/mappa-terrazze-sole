@@ -52,6 +52,15 @@ export default function Markers({ map }: Props) {
           'circle-stroke-color': '#ffffff',
         },
       });
+
+      map.on('click', layerId, (e) => {
+        const f = e.features?.[0];
+        if (!f) return;
+        const id = (f.properties as { id: string }).id;
+        useStore.getState().setSelectedId(id);
+      });
+      map.on('mouseenter', layerId, () => { map.getCanvas().style.cursor = 'pointer'; });
+      map.on('mouseleave', layerId, () => { map.getCanvas().style.cursor = ''; });
     }
   }, [map, terraces, states]);
 

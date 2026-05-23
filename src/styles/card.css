@@ -15,7 +15,18 @@
 .card__status--shade { color: var(--shade); }
 .card__status--closed { color: var(--text-muted); }
 .card__until { font-size: 14px; color: var(--sun); margin: 4px 0; }
-.card__walk { font-size: 13px; color: var(--text-muted); margin: 4px 0 12px; }
+.card__walk { font-size: 13px; color: var(--text-muted); margin: 4px 0 8px; }
+.card__confidence {
+  font-size: 12px; margin: 4px 0 12px;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 3px 10px; border-radius: 999px;
+}
+.card__confidence--high { color: #2e7d32; background: rgba(46,125,50,0.1); }
+.card__confidence--medium { color: #b06b00; background: rgba(176,107,0,0.1); }
+.card__confidence--low { color: #777; background: rgba(128,128,128,0.15); }
+:root[data-theme='dark'] .card__confidence--high { color: #81c784; }
+:root[data-theme='dark'] .card__confidence--medium { color: #ffcf66; }
+:root[data-theme='dark'] .card__confidence--low { color: #aaa; }
 .card__cta {
   display: block; text-align: center;
   background: var(--brand); color: var(--brand-text); text-decoration: none;

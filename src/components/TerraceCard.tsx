@@ -5,6 +5,7 @@ import { haversineMeters } from '../lib/geometry.js';
 import { sunnyUntil } from '../lib/sunny-until.js';
 import { getSunPosition } from '../lib/sun.js';
 import { isInSun } from '../lib/shadow-engine.js';
+import { getShadeConfidence } from '../lib/shade-confidence.js';
 import { useModalDismiss } from '../lib/use-modal-dismiss.js';
 import { t } from '../i18n/i18n.js';
 import '../styles/card.css';
@@ -36,6 +37,8 @@ export default function TerraceCard() {
     });
   }
 
+  const confidence = buildingIndex ? getShadeConfidence(t1.lat, t1.lng, buildingIndex) : 'low';
+
   return (
     <div className="card" role="dialog" aria-modal="true">
       <button className="card__close" onClick={() => setSelectedId(null)} aria-label={t('close')}>
@@ -58,6 +61,13 @@ export default function TerraceCard() {
           {Math.round(dist)} m · {t('walkMinutes', { n: walkingMinutes(dist) })}
         </p>
       )}
+      <p className={`card__confidence card__confidence--${confidence}`}
+         title={t(`confidence_${confidence}_tip` as 'confidence_high_tip')}>
+        <span aria-hidden="true">
+          {confidence === 'high' ? '✓' : confidence === 'medium' ? '~' : '?'}
+        </span>{' '}
+        <span>{t(`confidence_${confidence}` as 'confidence_high')}</span>
+      </p>
       <a
         className="card__cta"
         href={googleMapsUrl({ name: t1.name, address: t1.address })}

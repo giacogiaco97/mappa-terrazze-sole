@@ -104,7 +104,7 @@ export default function Markers({ map }: Props) {
         layout: {
           'text-field': ['get', 'point_count_abbreviated'],
           'text-size': 12,
-          'text-font': ['Noto Sans Bold', 'Noto Sans Regular'],
+          'text-font': ['Noto Sans Regular'],
         },
         paint: {
           'text-color': '#1a1a1a',

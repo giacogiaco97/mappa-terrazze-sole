@@ -35,5 +35,11 @@
   "updateApply": "Update",
   "sunrise": "Sunrise",
   "resetToNow": "Back to now",
-  "timeSliderLabel": "Move in time"
+  "timeSliderLabel": "Move in time",
+  "confidence_high": "Shadow accurate",
+  "confidence_high_tip": "Heights of surrounding buildings known (OSM)",
+  "confidence_medium": "Shadow approximate",
+  "confidence_medium_tip": "Heights estimated from floor count",
+  "confidence_low": "Shadow estimated",
+  "confidence_low_tip": "No height data: defaulting to 12 m"
 }

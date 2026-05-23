@@ -11,7 +11,11 @@ export default defineConfig({
     VitePWA({
       // 'prompt' invece di 'autoUpdate' per dare il controllo all'utente via UpdatePrompt.
       registerType: 'prompt',
-      includeAssets: ['favicon.ico', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-512-maskable.png'],
+      includeAssets: [
+        'favicon.ico',
+        'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-512-maskable.png',
+        'screenshots/mobile-1.png', 'screenshots/desktop-1.png',
+      ],
       manifest: {
         name: 'Mappa delle terrazze al sole',
         short_name: 'Terrazze al sole',
@@ -35,6 +39,22 @@ export default defineConfig({
             description: 'Centrar mapa en mi posición',
             url: './?action=locate',
             icons: [{ src: 'icons/icon-192.png', sizes: '192x192' }],
+          },
+        ],
+        screenshots: [
+          {
+            src: 'screenshots/mobile-1.png',
+            sizes: '414x896',
+            type: 'image/png',
+            form_factor: 'narrow',
+            label: 'Mapa de terrazas al sol en Barcelona',
+          },
+          {
+            src: 'screenshots/desktop-1.png',
+            sizes: '1280x720',
+            type: 'image/png',
+            form_factor: 'wide',
+            label: 'Mapa de terrazas al sol en Barcelona (escritorio)',
           },
         ],
       },

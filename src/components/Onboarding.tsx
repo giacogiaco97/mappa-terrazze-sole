@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { t } from '../i18n/i18n.js';
 import { useModalDismiss } from '../lib/use-modal-dismiss.js';
 import '../styles/onboarding.css';
@@ -7,6 +7,7 @@ const STORAGE_KEY = 'onboarding-seen-v1';
 
 export default function Onboarding() {
   const [show, setShow] = useState(false);
+  const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     try {
@@ -19,12 +20,12 @@ export default function Onboarding() {
     setShow(false);
   };
 
-  useModalDismiss(show, close);
+  useModalDismiss(show, close, modalRef);
 
   if (!show) return null;
   return (
     <div className="onboarding-backdrop" data-modal-backdrop>
-      <div className="onboarding" role="dialog" aria-modal="true" aria-label={t('onboardingTitle')}>
+      <div ref={modalRef} className="onboarding" role="dialog" aria-modal="true" aria-label={t('onboardingTitle')}>
         <h2 className="onboarding__title">{t('onboardingTitle')}</h2>
         <p className="onboarding__intro">{t('onboardingIntro')}</p>
         <ul className="onboarding__list">

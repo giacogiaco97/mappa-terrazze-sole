@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { t } from '../i18n/i18n.js';
 import { useModalDismiss } from '../lib/use-modal-dismiss.js';
 import { useStore } from '../store/use-store.js';
@@ -8,7 +8,8 @@ export default function CreditsButton() {
   const [open, setOpen] = useState(false);
   const theme = useStore((s) => s.theme);
   const setTheme = useStore((s) => s.setTheme);
-  useModalDismiss(open, () => setOpen(false));
+  const modalRef = useRef<HTMLDivElement>(null);
+  useModalDismiss(open, () => setOpen(false), modalRef);
 
   const nextTheme = () => {
     // ciclo: auto (null) → light → dark → auto
@@ -30,7 +31,7 @@ export default function CreditsButton() {
       </button>
       {open && (
         <div className="credits-backdrop" data-modal-backdrop>
-          <div className="credits-modal" role="dialog" aria-modal="true" aria-label={t('creditsTitle')}>
+          <div ref={modalRef} className="credits-modal" role="dialog" aria-modal="true" aria-label={t('creditsTitle')}>
             <button className="credits-modal__close" onClick={() => setOpen(false)} aria-label={t('close')}>
               <span aria-hidden="true">×</span>
             </button>

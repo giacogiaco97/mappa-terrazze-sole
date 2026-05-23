@@ -10,3 +10,6 @@ data-raw/
 .claude/
 lighthouse-*.json
 lighthouse-*.html
+coverage/
+playwright-report/
+test-results/

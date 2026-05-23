@@ -35,5 +35,11 @@
   "updateApply": "Actualizar",
   "sunrise": "Amanecer",
   "resetToNow": "Volver a ahora",
-  "timeSliderLabel": "Mover en el tiempo"
+  "timeSliderLabel": "Mover en el tiempo",
+  "confidence_high": "Sombra fiable",
+  "confidence_high_tip": "Altura de los edificios vecinos disponible (OSM)",
+  "confidence_medium": "Sombra aproximada",
+  "confidence_medium_tip": "Altura estimada desde n° de plantas",
+  "confidence_low": "Sombra estimada",
+  "confidence_low_tip": "Sin datos de altura: se usa 12 m por defecto"
 }

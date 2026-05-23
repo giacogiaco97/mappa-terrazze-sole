@@ -9,6 +9,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
     "pipeline:terraces": "tsx scripts/fetch-terraces.ts",
     "pipeline:buildings": "tsx scripts/fetch-buildings.ts",
     "pipeline:heights": "tsx scripts/resolve-heights.ts",
@@ -17,11 +19,13 @@
     "pipeline:run": "npm run pipeline:terraces && npm run pipeline:buildings && npm run pipeline:heights && npm run pipeline:pois && npm run pipeline:build"
   },
   "devDependencies": {
+    "@playwright/test": "^1.60.0",
     "@types/node": "^25.9.1",
     "@types/react": "^19.2.15",
     "@types/react-dom": "^19.2.3",
     "@types/suncalc": "^1.9.2",
     "@vitejs/plugin-react": "^6.0.2",
+    "@vitest/coverage-v8": "^4.1.7",
     "tsx": "^4.22.3",
     "typescript": "^5.9.3",
     "vite": "^8.0.14",

@@ -8,3 +8,5 @@ data-raw/
 .cache/
 .vitest-cache/
 .claude/
+lighthouse-*.json
+lighthouse-*.html

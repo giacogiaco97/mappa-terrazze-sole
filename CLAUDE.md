@@ -17,6 +17,7 @@ PWA mobile-first che mostra in tempo reale quali terrazze di Barcellona sono al 
 - **Hotfix POI** (2026-05-23) — Arricchimento nomi commerciali via OSM POI (Overpass). Da 0% a 68% copertura nomi locali. Vedi `scripts/fetch-osm-pois.ts` + `scripts/lib/match-pois.ts`.
 - **Hotfix Lighthouse/a11y/perf** (2026-05-23) — Mobile A11y 96→100, BP 96→100. Code-splitting MapLibre tentato e revertato (peggiorava LCP). Geolocation gated da permissions.query. requestIdleCallback per computeAllStates.
 - **Audit completo** (2026-05-23) — Fix 24 voci da `docs/audit-2026-05-23.md`: split useEffect (slider lag), modali Escape, cluster marker, deep-link `?id=`, ricerca+filtri, dark mode, infinite scroll, onboarding, compressione dati, SW update prompt, ErrorBoundary, catalano i18n, CSP meta, pipeline validation.
+- **Hardening finale** (2026-05-23) — Coverage v8 (94% statements), confidence ombra (high/medium/low basato su heightSource), PWA screenshots (mobile+desktop), focus trap completo nei modali, analytics Plausible opzionale (env var), E2E Playwright (6 test smoke).
 
 ## Layout file
 
@@ -34,10 +35,12 @@ PWA mobile-first che mostra in tempo reale quali terrazze di Barcellona sono al 
 
 ```bash
 npm run dev               # dev server su :5180 (strictPort)
-npm test                  # vitest run (51 test attualmente)
+npm test                  # vitest run (60 test attualmente)
+npm run test:coverage     # vitest + coverage v8 (HTML in coverage/)
+npm run test:e2e          # playwright smoke test (6 test, Chromium mobile)
 npm run build             # build prod in dist/
 npm run preview           # serve dist/
-npm run pipeline:run      # rigenera tutti i dati (terraces + buildings + heights + chunks)
+npm run pipeline:run      # rigenera tutti i dati (terraces + buildings + heights + pois + build)
 ```
 
 ## Convenzioni

@@ -11,6 +11,7 @@ import { useModalDismiss } from '../lib/use-modal-dismiss.js';
 import { computeSunTimeline, type TimelineState } from '../lib/sun-timeline.js';
 import SunTimeline from './SunTimeline.js';
 import TerraceMiniMap from './TerraceMiniMap.js';
+import { getWeatherAt, weatherKind, weatherEmoji } from '../lib/weather.js';
 import { t } from '../i18n/i18n.js';
 import '../styles/card.css';
 
@@ -35,6 +36,7 @@ export default function TerraceCard() {
   const selectedId = useStore((s) => s.selectedId);
   const setSelectedId = useStore((s) => s.setSelectedId);
   const buildingIndex = useStore((s) => s.buildingIndex);
+  const weather = useStore((s) => s.weather);
 
   useModalDismiss(!!selectedId, () => setSelectedId(null));
 
@@ -50,11 +52,16 @@ export default function TerraceCard() {
       (d): TimelineState => {
         const sun = getSunPosition(d, t1.lat, t1.lng);
         if (sun.altitude <= 0) return 'night';
-        return isInSun(t1.lat, t1.lng, sun, buildingIndex) ? 'sun' : 'shade';
+        if (!isInSun(t1.lat, t1.lng, sun, buildingIndex)) return 'shade';
+        // Sole astronomico libero: applica filtro meteo
+        const w = getWeatherAt(weather, d);
+        const k = weatherKind(w);
+        if (k === 'cloudy' || k === 'rain' || k === 'snow' || k === 'thunder' || k === 'fog') return 'shade';
+        return 'sun';
       },
       15,
     );
-  }, [t1, buildingIndex, now]);
+  }, [t1, buildingIndex, now, weather]);
 
   if (!t1) return null;
 
@@ -84,8 +91,18 @@ export default function TerraceCard() {
   const statusLabel =
     status === 'sun' ? t('statusSunNow') :
     status === 'shade' ? t('statusShadeNow') :
+    status === 'cloudy' ? t('statusCloudyNow') :
     status === 'closed' ? t('statusClosedNow') : '';
-  const statusIcon = status === 'sun' ? '☀️' : status === 'shade' ? '🌫️' : status === 'closed' ? '🌙' : '';
+  const statusIcon =
+    status === 'sun' ? '☀️' :
+    status === 'shade' ? '🌫️' :
+    status === 'cloudy' ? '☁️' :
+    status === 'closed' ? '🌙' : '';
+
+  // Meteo per l'ora corrente
+  const weatherHour = getWeatherAt(weather, now);
+  const wKind = weatherKind(weatherHour);
+  const weatherLabel = t(`weather${wKind.charAt(0).toUpperCase()}${wKind.slice(1)}` as 'weatherClear');
 
   return (
     <div className="card" role="dialog" aria-modal="true" aria-labelledby="card-title">
@@ -100,6 +117,14 @@ export default function TerraceCard() {
         </span>
         <h2 id="card-title" className="card__title">{t1.name || t1.address}</h2>
         {subtitle && <p className="card__subtitle">{subtitle}</p>}
+        {weatherHour && wKind !== 'unknown' && (
+          <p className="card__weather" title={t('weatherForecast')}>
+            <span aria-hidden="true">{weatherEmoji(wKind)}</span>{' '}
+            <span>{weatherLabel}</span>
+            <span className="card__weather-sep" aria-hidden="true"> · </span>
+            <span>{t('cloudCoverPct', { n: weatherHour.cloudCover })}</span>
+          </p>
+        )}
       </header>
 
       {timeline && (

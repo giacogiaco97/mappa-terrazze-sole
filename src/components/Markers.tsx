@@ -5,6 +5,7 @@ import { useStore, type TerraceStatus } from '../store/use-store.js';
 const COLORS: Record<TerraceStatus, string> = {
   sun: '#f5a623',
   shade: '#3a6ea5',
+  cloudy: '#a89b7c', // sole astronomico ma cielo coperto
   closed: '#666666',
   pending: '#cccccc',
 };
@@ -61,6 +62,7 @@ export default function Markers({ map }: Props) {
             'match', ['get', 'status'],
             'sun', COLORS.sun,
             'shade', COLORS.shade,
+            'cloudy', COLORS.cloudy,
             'closed', COLORS.closed,
             COLORS.pending,
           ],

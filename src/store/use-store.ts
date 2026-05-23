@@ -1,8 +1,9 @@
 import { create } from 'zustand';
 import type { Terrace } from '../types/index.js';
 import type { BuildingIndex } from '../lib/building-index.js';
+import type { Weather } from '../lib/weather.js';
 
-export type TerraceStatus = 'sun' | 'shade' | 'closed' | 'pending';
+export type TerraceStatus = 'sun' | 'shade' | 'closed' | 'pending' | 'cloudy';
 
 type State = {
   now: Date;
@@ -26,6 +27,8 @@ type State = {
   setShowShade: (v: boolean) => void;
   theme: 'light' | 'dark' | null;
   setTheme: (t: 'light' | 'dark' | null) => void;
+  weather: Weather | null;
+  setWeather: (w: Weather | null) => void;
 };
 
 export const useStore = create<State>((set) => ({
@@ -59,4 +62,6 @@ export const useStore = create<State>((set) => ({
     }
     set({ theme });
   },
+  weather: null,
+  setWeather: (weather) => set({ weather }),
 }));

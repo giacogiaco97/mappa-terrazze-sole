@@ -31,8 +31,10 @@ export default function TerraceList({ onSelectTerrace }: Props) {
     const q = search.trim().toLowerCase();
     return sorted.filter(({ terrace }) => {
       const status = states[terrace.id] ?? 'pending';
+      // Default: solo terrazze davvero al sole (cielo pulito).
+      // Con "Includi in ombra": anche shade + cloudy (sole bloccato da nuvole).
       if (!showShade && status !== 'sun') return false;
-      if (showShade && status !== 'sun' && status !== 'shade') return false;
+      if (showShade && status !== 'sun' && status !== 'shade' && status !== 'cloudy') return false;
       if (terrace.tables < minTables) return false;
       if (q) {
         const inName = terrace.name.toLowerCase().includes(q);

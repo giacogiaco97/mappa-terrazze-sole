@@ -2,20 +2,58 @@
   position: absolute;
   top: env(safe-area-inset-top, 0);
   left: 0; right: 0;
-  padding: 10px 16px 8px;
+  padding: 6px 10px 6px;
   background: var(--bg-overlay);
   backdrop-filter: blur(8px);
   z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
+
+/* Day picker: chip orizzontali scrollabili */
+.time-slider__days {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding: 2px 0 4px;
+}
+.time-slider__days::-webkit-scrollbar { display: none; }
+.time-slider__day {
+  appearance: none;
+  flex: 0 0 auto;
+  background: var(--chip-bg);
+  color: var(--text);
+  border: 1px solid transparent;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+}
+.time-slider__day:hover { border-color: var(--border); }
+.time-slider__day--active {
+  background: var(--brand);
+  color: var(--brand-text);
+  border-color: var(--brand);
+}
+
 .time-slider__row {
   display: flex; justify-content: space-between; align-items: center;
-  font-size: 14px; margin-bottom: 6px;
+  font-size: 14px;
 }
 .time-slider__now {
   background: var(--brand); color: var(--brand-text); border: 0; padding: 6px 12px; border-radius: 999px;
   font-weight: 700; font-size: 14px; cursor: pointer;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 .time-slider__sunset {
   color: var(--sun); font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
-.time-slider input[type=range] { width: 100%; }
+.time-slider input[type=range] { width: 100%; margin-top: 2px; }

@@ -12,7 +12,7 @@ type Props = {
 };
 
 const STATUS_EMOJI: Record<TerraceStatus, string> = {
-  sun: '☀️', shade: '🌫️', closed: '🌙', pending: '…',
+  sun: '☀️', shade: '🌫️', cloudy: '☁️', closed: '🌙', pending: '…',
 };
 
 export default function TerraceListRow({ terrace, status, distanceMeters, onSelect }: Props) {

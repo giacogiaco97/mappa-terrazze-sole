@@ -55,5 +55,19 @@
   "statusSunNow": "Sunny now",
   "statusShadeNow": "In shade",
   "statusClosedNow": "Sun has set",
-  "shareLocation": "Share"
+  "shareLocation": "Share",
+  "today": "Today",
+  "tomorrow": "Tomorrow",
+  "pickDayLabel": "Choose the day",
+  "weatherClear": "Clear",
+  "weatherPartly": "Partly cloudy",
+  "weatherCloudy": "Overcast",
+  "weatherFog": "Fog",
+  "weatherRain": "Rain",
+  "weatherSnow": "Snow",
+  "weatherThunder": "Thunderstorm",
+  "weatherUnknown": "Weather unavailable",
+  "statusCloudyNow": "Sun blocked by clouds",
+  "cloudCoverPct": "{n}% clouds",
+  "weatherForecast": "Weather forecast"
 }

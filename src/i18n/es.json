@@ -55,5 +55,19 @@
   "statusSunNow": "Al sol ahora",
   "statusShadeNow": "A la sombra",
   "statusClosedNow": "El sol ya se puso",
-  "shareLocation": "Compartir"
+  "shareLocation": "Compartir",
+  "today": "Hoy",
+  "tomorrow": "Mañana",
+  "pickDayLabel": "Elige el día",
+  "weatherClear": "Despejado",
+  "weatherPartly": "Parcialmente nublado",
+  "weatherCloudy": "Cubierto",
+  "weatherFog": "Niebla",
+  "weatherRain": "Lluvia",
+  "weatherSnow": "Nieve",
+  "weatherThunder": "Tormenta",
+  "weatherUnknown": "Tiempo no disponible",
+  "statusCloudyNow": "Sol cubierto por nubes",
+  "cloudCoverPct": "{n}% nubes",
+  "weatherForecast": "Previsión del tiempo"
 }

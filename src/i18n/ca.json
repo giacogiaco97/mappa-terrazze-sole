@@ -55,5 +55,19 @@
   "statusSunNow": "Al sol ara",
   "statusShadeNow": "A l'ombra",
   "statusClosedNow": "El sol ja s'ha post",
-  "shareLocation": "Comparteix"
+  "shareLocation": "Comparteix",
+  "today": "Avui",
+  "tomorrow": "Demà",
+  "pickDayLabel": "Tria el dia",
+  "weatherClear": "Cel serè",
+  "weatherPartly": "Parcialment ennuvolat",
+  "weatherCloudy": "Cobert",
+  "weatherFog": "Boira",
+  "weatherRain": "Pluja",
+  "weatherSnow": "Neu",
+  "weatherThunder": "Tempesta",
+  "weatherUnknown": "Temps no disponible",
+  "statusCloudyNow": "Sol cobert pels núvols",
+  "cloudCoverPct": "{n}% núvols",
+  "weatherForecast": "Previsió del temps"
 }

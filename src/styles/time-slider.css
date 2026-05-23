@@ -11,7 +11,7 @@
   gap: 4px;
 }
 
-/* Day picker: chip orizzontali scrollabili */
+/* Day picker: chip orizzontali scrollabili con sparkline meteo */
 .time-slider__days {
   display: flex;
   gap: 6px;
@@ -27,13 +27,19 @@
   background: var(--chip-bg);
   color: var(--text);
   border: 1px solid transparent;
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 12px;
+  padding: 5px 10px;
+  border-radius: 14px;
+  font-size: 11px;
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
   transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  line-height: 1.2;
+  min-width: 58px;
 }
 .time-slider__day:hover { border-color: var(--border); }
 .time-slider__day--active {
@@ -41,6 +47,22 @@
   color: var(--brand-text);
   border-color: var(--brand);
 }
+.time-slider__day-name { font-size: 11px; font-weight: 700; }
+.time-slider__day-stat {
+  display: inline-flex; align-items: center; gap: 2px;
+  font-size: 11px;
+}
+.time-slider__day-pct {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.95;
+}
+.time-slider__day-temp {
+  font-size: 10px;
+  font-weight: 500;
+  opacity: 0.7;
+  font-variant-numeric: tabular-nums;
+}
+.time-slider__day--active .time-slider__day-temp { opacity: 0.85; }
 
 .time-slider__row {
   display: flex; justify-content: space-between; align-items: center;

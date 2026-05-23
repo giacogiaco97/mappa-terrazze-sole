@@ -65,6 +65,30 @@
 }
 .card__weather-sep { margin: 0 2px; }
 
+.card__rain-alert {
+  margin: 6px 0 0;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #1f4773;
+  background: rgba(58, 110, 165, 0.14);
+  border-radius: 8px;
+  border-left: 3px solid #3a6ea5;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+:root[data-theme='dark'] .card__rain-alert {
+  color: #a8c4e8;
+  background: rgba(58, 110, 165, 0.22);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .card__rain-alert {
+    color: #a8c4e8;
+    background: rgba(58, 110, 165, 0.22);
+  }
+}
+
 /* Status pill */
 .card__pill {
   display: inline-flex; align-items: center; gap: 6px;

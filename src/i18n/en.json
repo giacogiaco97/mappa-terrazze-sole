@@ -69,5 +69,9 @@
   "weatherUnknown": "Weather unavailable",
   "statusCloudyNow": "Sun blocked by clouds",
   "cloudCoverPct": "{n}% clouds",
-  "weatherForecast": "Weather forecast"
+  "weatherForecast": "Weather forecast",
+  "rainSoon": "Rain likely at {time} ({prob}%)",
+  "sparklineSun": "{n}% sun",
+  "tomorrowGreatSun": "Tomorrow: {h}h of sun forecast — get ready!",
+  "tomorrowBannerClose": "Close notice"
 }

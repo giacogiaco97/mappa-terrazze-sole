@@ -11,7 +11,7 @@ import { useModalDismiss } from '../lib/use-modal-dismiss.js';
 import { computeSunTimeline, type TimelineState } from '../lib/sun-timeline.js';
 import SunTimeline from './SunTimeline.js';
 import TerraceMiniMap from './TerraceMiniMap.js';
-import { getWeatherAt, weatherKind, weatherEmoji } from '../lib/weather.js';
+import { getWeatherAt, weatherKind, weatherEmoji, findNextRain } from '../lib/weather.js';
 import { t } from '../i18n/i18n.js';
 import '../styles/card.css';
 
@@ -103,6 +103,9 @@ export default function TerraceCard() {
   const weatherHour = getWeatherAt(weather, now);
   const wKind = weatherKind(weatherHour);
   const weatherLabel = t(`weather${wKind.charAt(0).toUpperCase()}${wKind.slice(1)}` as 'weatherClear');
+  // Pioggia entro le prossime 6 ore (a livello città)
+  const rainAhead = findNextRain(weather, now, 6);
+  const rainLabel = rainAhead ? formatTime(new Date(rainAhead.time)) : null;
 
   return (
     <div className="card" role="dialog" aria-modal="true" aria-labelledby="card-title">
@@ -120,9 +123,17 @@ export default function TerraceCard() {
         {weatherHour && wKind !== 'unknown' && (
           <p className="card__weather" title={t('weatherForecast')}>
             <span aria-hidden="true">{weatherEmoji(wKind)}</span>{' '}
+            <span>{Math.round(weatherHour.tempC)}°C</span>
+            <span className="card__weather-sep" aria-hidden="true"> · </span>
             <span>{weatherLabel}</span>
             <span className="card__weather-sep" aria-hidden="true"> · </span>
             <span>{t('cloudCoverPct', { n: weatherHour.cloudCover })}</span>
+          </p>
+        )}
+        {rainAhead && rainLabel && (
+          <p className="card__rain-alert" role="status">
+            <span aria-hidden="true">🌧️</span>{' '}
+            {t('rainSoon', { time: rainLabel, prob: rainAhead.precipProb })}
           </p>
         )}
       </header>

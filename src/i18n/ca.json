@@ -69,5 +69,9 @@
   "weatherUnknown": "Temps no disponible",
   "statusCloudyNow": "Sol cobert pels núvols",
   "cloudCoverPct": "{n}% núvols",
-  "weatherForecast": "Previsió del temps"
+  "weatherForecast": "Previsió del temps",
+  "rainSoon": "Pluja probable a les {time} ({prob}%)",
+  "sparklineSun": "{n}% sol",
+  "tomorrowGreatSun": "Demà es preveuen {h}h de sol — prepara la terrassa!",
+  "tomorrowBannerClose": "Tancar avís"
 }

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useStore } from '../store/use-store.js';
 import { getTimes, getSunPosition } from '../lib/sun.js';
+import { getDailySummary, weatherEmoji } from '../lib/weather.js';
 import { t } from '../i18n/i18n.js';
 import '../styles/time-slider.css';
 
@@ -39,6 +40,7 @@ function formatDayChip(d: Date, today: Date, locale: string | undefined): string
 export default function TimeSlider() {
   const now = useStore((s) => s.now);
   const setNow = useStore((s) => s.setNow);
+  const weather = useStore((s) => s.weather);
   const [valueMin, setValueMin] = useState(0);
   const [realNow, setRealNow] = useState(() => new Date());
 
@@ -113,6 +115,7 @@ export default function TimeSlider() {
       <div className="time-slider__days" role="tablist" aria-label={t('pickDayLabel')}>
         {dayOptions.map((d) => {
           const active = sameDay(d, now);
+          const summary = getDailySummary(weather, d);
           return (
             <button
               key={d.toISOString().slice(0, 10)}
@@ -120,8 +123,20 @@ export default function TimeSlider() {
               aria-selected={active}
               className={`time-slider__day${active ? ' time-slider__day--active' : ''}`}
               onClick={() => pickDay(d)}
+              aria-label={summary ? `${formatDayChip(d, realNow, locale)} · ${t('sparklineSun', { n: summary.sunPct })} · ${Math.round(summary.tempMax)}°C` : formatDayChip(d, realNow, locale)}
             >
-              {formatDayChip(d, realNow, locale)}
+              <span className="time-slider__day-name">{formatDayChip(d, realNow, locale)}</span>
+              {summary && (
+                <span className="time-slider__day-stat">
+                  <span aria-hidden="true">{weatherEmoji(summary.dominantKind)}</span>{' '}
+                  <span className="time-slider__day-pct">{summary.sunPct}%</span>
+                </span>
+              )}
+              {summary && (
+                <span className="time-slider__day-temp" aria-hidden="true">
+                  {Math.round(summary.tempMax)}°
+                </span>
+              )}
             </button>
           );
         })}

@@ -10,6 +10,7 @@ import GeolocateButton from './components/GeolocateButton.js';
 import CreditsButton from './components/CreditsButton.js';
 import Onboarding from './components/Onboarding.js';
 import UpdatePrompt from './components/UpdatePrompt.js';
+import TomorrowBanner from './components/TomorrowBanner.js';
 import { useGeolocation } from './lib/use-geolocation.js';
 import { useUrlSync } from './lib/use-url-sync.js';
 import { useStore } from './store/use-store.js';
@@ -151,6 +152,7 @@ export default function App() {
       <CreditsButton />
       <Onboarding />
       <UpdatePrompt />
+      <TomorrowBanner />
     </div>
   );
 }

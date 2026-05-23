@@ -69,5 +69,9 @@
   "weatherUnknown": "Tiempo no disponible",
   "statusCloudyNow": "Sol cubierto por nubes",
   "cloudCoverPct": "{n}% nubes",
-  "weatherForecast": "Previsión del tiempo"
+  "weatherForecast": "Previsión del tiempo",
+  "rainSoon": "Lluvia probable a las {time} ({prob}%)",
+  "sparklineSun": "{n}% sol",
+  "tomorrowGreatSun": "Mañana se prevén {h}h de sol — ¡prepara tu terraza!",
+  "tomorrowBannerClose": "Cerrar aviso"
 }

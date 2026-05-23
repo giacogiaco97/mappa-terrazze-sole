@@ -14,14 +14,17 @@ PWA mobile-first che mostra in tempo reale quali terrazze di Barcellona sono al 
 - **Session 1** (2026-05-23) — Data Foundation: pipeline dati (CSV terrazze BCN, Overpass edifici, risolutore altezze, partizionamento spaziale), libreria funzioni pure (geometry, sun, shadow-engine).
 - **Session 2** (2026-05-23) — PWA Core: shell Vite+React+TS, basemap MapLibre + OpenFreeMap, geolocation, data-loader, markers colorati, store Zustand, PWA (manifest + service worker).
 - **Session 3** (2026-05-23) — UX & Deploy: BottomSheet trascinabile, lista terrazze ordinata per distanza, TimeSlider con tramonto, TerraceCard con "sunny until" + Google Maps, GeolocateButton, banner edge case (geoloc denied / fuori BCN), CreditsButton CC-BY, icone PWA brandate, deploy live su GitHub Pages.
+- **Hotfix POI** (2026-05-23) — Arricchimento nomi commerciali via OSM POI (Overpass). Da 0% a 68% copertura nomi locali. Vedi `scripts/fetch-osm-pois.ts` + `scripts/lib/match-pois.ts`.
+- **Hotfix Lighthouse/a11y/perf** (2026-05-23) — Mobile A11y 96→100, BP 96→100. Code-splitting MapLibre tentato e revertato (peggiorava LCP). Geolocation gated da permissions.query. requestIdleCallback per computeAllStates.
+- **Audit completo** (2026-05-23) — Fix 24 voci da `docs/audit-2026-05-23.md`: split useEffect (slider lag), modali Escape, cluster marker, deep-link `?id=`, ricerca+filtri, dark mode, infinite scroll, onboarding, compressione dati, SW update prompt, ErrorBoundary, catalano i18n, CSP meta, pipeline validation.
 
 ## Layout file
 
-- `src/lib/` — funzioni pure (TDD obbligatorio). Geometria, sun, shadow engine, helper (google-maps, walking-time, sunny-until, sort-terraces).
-- `src/components/` — UI React. MapView, Markers, TimeSlider, BottomSheet, TerraceList(+Row), TerraceCard, GeolocateButton, CreditsButton.
-- `src/store/use-store.ts` — Zustand. State: now, userPos, terraces, states, selectedId, buildingIndex.
-- `src/i18n/` — ES + EN, helper `t(key, vars)`.
-- `src/styles/` — CSS per componente.
+- `src/lib/` — funzioni pure (TDD obbligatorio). Geometria, sun, shadow engine, helper (google-maps, walking-time, sunny-until, sort-terraces, use-modal-dismiss, use-url-sync).
+- `src/components/` — UI React. MapView, Markers (cluster), TimeSlider, BottomSheet, TerraceList(+Row, con ricerca/filtri/infinite scroll), TerraceCard, GeolocateButton, CreditsButton (+ theme toggle), Onboarding, UpdatePrompt, ErrorBoundary.
+- `src/store/use-store.ts` — Zustand. State: now, userPos, terraces, states, selectedId, buildingIndex, search, minTables, showShade, theme.
+- `src/i18n/` — ES + EN + CA, helper `t(key, vars)` con fallback ES.
+- `src/styles/` — CSS per componente con CSS variables tema light/dark.
 - `scripts/` — pipeline Node (TS via tsx) + generate-icons.mjs.
 - `public/data/` — terraces.json, meta.json, buildings/{x}_{y}.json (output pipeline).
 - `.github/workflows/` — data-pipeline (cron mensile) + deploy-pages (push su main).
@@ -47,7 +50,13 @@ npm run pipeline:run      # rigenera tutti i dati (terraces + buildings + height
 
 ## Gotcha
 
-- Dataset BCN non ha il nome commerciale → arricchimento via OSM POI in pipeline (`scripts/fetch-osm-pois.ts` + `scripts/lib/match-pois.ts`). Copertura ~59% delle terrazze.
+- Dataset BCN non ha il nome commerciale → arricchimento via OSM POI in pipeline (`scripts/fetch-osm-pois.ts` + `scripts/lib/match-pois.ts`). Copertura ~68% delle terrazze (raggio 50m, include amenity/shop/tourism).
+- **App.tsx ha 2 useEffect separati** per i dati: (a) carica una volta `terraces+buildingIndex` quando `map` cambia. (b) Ricomputa `states` quando `now/terraces/buildingIndex` cambiano. Crucial: senza questo split lo slider orario aveva lag 1-2s perché rifaceva loadTerraces+buildBuildingIndex a ogni cambio `now`.
+- Markers usa cluster MapLibre nativo (`cluster: true, clusterRadius: 28, clusterMaxZoom: 17`). Cluster colorato arancio se contiene almeno 1 sunny. Click cluster → easeTo expansion zoom.
+- Deep-link condivisibile: `?id=T-1234` apre direttamente la card. Hook `useUrlSync` aggiorna URL via replaceState al cambio `selectedId`. Anche `?action=locate` per PWA shortcut.
+- Dark mode: CSS variables `:root` + `:root[data-theme='dark']` + `@media (prefers-color-scheme: dark)`. Toggle 3-stati nel modal crediti (auto → light → dark). Bootstrap in `main.tsx` per evitare FOUC.
+- Service worker registerType: `'prompt'` (non più autoUpdate silente). Quando installa nuova versione, `UpdatePrompt` toast con CTA → skipWaiting + reload.
+- CSP meta tag in `index.html`: limita origini a self + tiles.openfreemap.org. `frame-ancestors 'none'` previene clickjacking.
 - `map.on('load')` / `map.once('idle')` non sono affidabili in ambienti headless (Playwright preview) e con tile lenti. App.tsx esegue `run()` immediatamente dopo `setMap`; Markers attende `isStyleLoaded()` o `map.once('load')` come fallback.
 - `vite.config.ts` ha `base: './'` per supportare GitHub Pages sotto `/repo/`.
 - `vite.config.ts` ha `server.port=5180 strictPort` per evitare conflitti con altri progetti.

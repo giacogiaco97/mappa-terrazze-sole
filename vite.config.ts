@@ -4,6 +4,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
   base: './', // pronto per GitHub Pages sotto /repo/
+  server: { port: 5180, strictPort: true },
   plugins: [
     react(),
     VitePWA({

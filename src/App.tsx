@@ -9,6 +9,7 @@ import TerraceCard from './components/TerraceCard.js';
 import GeolocateButton from './components/GeolocateButton.js';
 import CreditsButton from './components/CreditsButton.js';
 import { useGeolocation } from './lib/use-geolocation.js';
+import { useUrlSync } from './lib/use-url-sync.js';
 import { useStore } from './store/use-store.js';
 import { loadTerraces, loadMeta, loadBuildingChunk, cellsForBbox } from './lib/data-loader.js';
 import { buildBuildingIndex } from './lib/building-index.js';
@@ -23,6 +24,7 @@ type IdleWindow = Window & typeof globalThis & {
 export default function App() {
   const [map, setMap] = useState<MLMap | null>(null);
   const geo = useGeolocation();
+  useUrlSync();
   const setTerraces = useStore((s) => s.setTerraces);
   const setStates = useStore((s) => s.setStates);
   const setUserPos = useStore((s) => s.setUserPos);

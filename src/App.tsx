@@ -3,20 +3,25 @@ import type { Map as MLMap } from 'maplibre-gl';
 import MapView from './components/MapView.js';
 import Markers from './components/Markers.js';
 import TimeSlider from './components/TimeSlider.js';
+import BottomSheet from './components/BottomSheet.js';
+import TerraceList from './components/TerraceList.js';
 import { useGeolocation } from './lib/use-geolocation.js';
 import { useStore } from './store/use-store.js';
 import { loadTerraces, loadMeta, loadBuildingChunk, cellsForBbox } from './lib/data-loader.js';
 import { buildBuildingIndex } from './lib/building-index.js';
 import { computeAllStates } from './lib/compute-states.js';
+import { t } from './i18n/i18n.js';
 import type { Building } from './types/index.js';
 
 export default function App() {
   const [map, setMap] = useState<MLMap | null>(null);
+  const [, setSelectedId] = useState<string | null>(null);
   const geo = useGeolocation();
   const setTerraces = useStore((s) => s.setTerraces);
   const setStates = useStore((s) => s.setStates);
   const setUserPos = useStore((s) => s.setUserPos);
   const now = useStore((s) => s.now);
+  const states = useStore((s) => s.states);
 
   // Geolocalizzazione → centra mappa (solo se l'utente è dentro BCN)
   useEffect(() => {
@@ -48,18 +53,23 @@ export default function App() {
       const index = buildBuildingIndex(allBuildings);
       if (cancelled) return;
 
-      const states = computeAllStates(list, now, index);
-      setStates(states);
+      const newStates = computeAllStates(list, now, index);
+      setStates(newStates);
     };
     map.once('idle', run);
     return () => { cancelled = true; };
   }, [map, now, setTerraces, setStates]);
+
+  const sunnyCount = Object.values(states).filter((s) => s === 'sun').length;
 
   return (
     <div className="app-root">
       <MapView onMapReady={setMap} />
       {map && <Markers map={map} />}
       <TimeSlider />
+      <BottomSheet collapsedLabel={t('sunnyNearby', { count: sunnyCount })}>
+        <TerraceList onSelectTerrace={setSelectedId} />
+      </BottomSheet>
     </div>
   );
 }

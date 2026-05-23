@@ -13,5 +13,15 @@
   "credits": "Data: Open Data BCN · OpenStreetMap · OpenFreeMap",
   "locateMe": "My location",
   "close": "Close",
-  "creditsTitle": "Credits"
+  "creditsTitle": "Credits",
+  "searchPlaceholder": "Search by name or street…",
+  "includeShade": "Include shade",
+  "minTablesLabel": "Min. tables",
+  "listEmpty": "No terraces match these filters",
+  "listNeedsLocation": "Enable location to see nearby terraces",
+  "sunRiseAt": "Next sunrise at {time}",
+  "themeToggle": "Theme",
+  "themeAuto": "Auto",
+  "themeLight": "Light",
+  "themeDark": "Dark"
 }

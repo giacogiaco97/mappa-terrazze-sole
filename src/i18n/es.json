@@ -13,5 +13,15 @@
   "credits": "Datos: Open Data BCN · OpenStreetMap · OpenFreeMap",
   "locateMe": "Mi posición",
   "close": "Cerrar",
-  "creditsTitle": "Créditos"
+  "creditsTitle": "Créditos",
+  "searchPlaceholder": "Buscar por nombre o calle…",
+  "includeShade": "Incluir en sombra",
+  "minTablesLabel": "Mín. mesas",
+  "listEmpty": "Ninguna terraza con estos filtros",
+  "listNeedsLocation": "Activa la ubicación para ver las terrazas cercanas",
+  "sunRiseAt": "Próximo amanecer a las {time}",
+  "themeToggle": "Tema",
+  "themeAuto": "Automático",
+  "themeLight": "Claro",
+  "themeDark": "Oscuro"
 }

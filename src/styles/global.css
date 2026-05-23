@@ -1,5 +1,58 @@
 @import url('./list.css');
 
+/* === Tema chiaro (default) === */
+:root {
+  --bg: #fafafa;
+  --bg-elev: #ffffff;
+  --bg-input: #f7f7f7;
+  --bg-overlay: rgba(255,255,255,0.95);
+  --text: #1a1a1a;
+  --text-muted: #555;
+  --border: #e5e5e5;
+  --chip-bg: #f0f0f0;
+  --brand: #f5a623;
+  --brand-text: #1a1a1a;
+  --shade: #3a6ea5;
+  --sun: #b06b00;
+  --shadow-card: 0 8px 32px rgba(0,0,0,0.18);
+  --shadow-btn: 0 4px 12px rgba(0,0,0,0.16);
+}
+
+/* === Tema scuro (auto da prefers-color-scheme) === */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --bg: #15171a;
+    --bg-elev: #1f2226;
+    --bg-input: #2a2d32;
+    --bg-overlay: rgba(31,34,38,0.95);
+    --text: #f0f0f0;
+    --text-muted: #aab1b8;
+    --border: #2e3238;
+    --chip-bg: #2a2d32;
+    --brand: #f5a623;
+    --brand-text: #1a1a1a;
+    --shade: #6b9bd6;
+    --sun: #ffcf66;
+    --shadow-card: 0 8px 32px rgba(0,0,0,0.6);
+    --shadow-btn: 0 4px 12px rgba(0,0,0,0.5);
+  }
+}
+/* === Tema scuro forzato (toggle) === */
+:root[data-theme='dark'] {
+  --bg: #15171a;
+  --bg-elev: #1f2226;
+  --bg-input: #2a2d32;
+  --bg-overlay: rgba(31,34,38,0.95);
+  --text: #f0f0f0;
+  --text-muted: #aab1b8;
+  --border: #2e3238;
+  --chip-bg: #2a2d32;
+  --shade: #6b9bd6;
+  --sun: #ffcf66;
+  --shadow-card: 0 8px 32px rgba(0,0,0,0.6);
+  --shadow-btn: 0 4px 12px rgba(0,0,0,0.5);
+}
+
 html, body, #root, .app-root {
   margin: 0;
   padding: 0;
@@ -7,7 +60,8 @@ html, body, #root, .app-root {
   width: 100%;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
   -webkit-tap-highlight-color: transparent;
-  background: #fafafa;
+  background: var(--bg);
+  color: var(--text);
 }
 * { box-sizing: border-box; }
 
@@ -17,4 +71,16 @@ html, body, #root, .app-root {
   padding: 10px 12px; border-radius: 10px;
   font-size: 13px; color: #6b3a00;
   z-index: 7;
+}
+:root[data-theme='dark'] .edge-banner,
+:root:not([data-theme='light']) .edge-banner {
+  /* tema scuro: banner contrastato comunque su giallo chiaro */
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .edge-banner {
+    background: #3a2e10; color: #ffdf99; border-color: #f5a623;
+  }
+}
+:root[data-theme='dark'] .edge-banner {
+  background: #3a2e10; color: #ffdf99; border-color: #f5a623;
 }

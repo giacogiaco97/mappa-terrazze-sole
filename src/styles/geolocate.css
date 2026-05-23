@@ -1,13 +1,17 @@
 .geolocate-btn {
   position: absolute;
   right: 12px;
-  bottom: calc(35% + 12px); /* sopra la bottom sheet collassata */
+  bottom: calc(35% + 12px);
   width: 48px; height: 48px;
   border-radius: 50%;
-  background: white;
+  background: var(--bg-elev); color: var(--text);
   border: 0;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.16);
+  box-shadow: var(--shadow-btn);
   font-size: 22px;
   z-index: 3;
   cursor: pointer;
+}
+.geolocate-btn[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
 }

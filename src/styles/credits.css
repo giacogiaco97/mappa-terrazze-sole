@@ -1,14 +1,15 @@
 .credits-btn {
   position: absolute; right: 12px; top: calc(env(safe-area-inset-top, 0px) + 64px);
   width: 32px; height: 32px; border-radius: 50%;
-  background: white; border: 0; box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+  background: var(--bg-elev); color: var(--text);
+  border: 0; box-shadow: 0 2px 6px rgba(0,0,0,0.18);
   font-style: italic; font-weight: 700;
   z-index: 3;
   cursor: pointer;
 }
 .credits-backdrop {
   position: fixed; inset: 0;
-  background: rgba(0,0,0,0.25);
+  background: rgba(0,0,0,0.35);
   z-index: 8;
   display: flex; align-items: flex-start; justify-content: center;
   padding-top: 72px;
@@ -17,9 +18,17 @@
   position: relative;
   margin: 0 16px;
   max-width: 480px; width: 100%;
-  background: white; border-radius: 14px;
-  padding: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  background: var(--bg-elev); color: var(--text);
+  border-radius: 14px;
+  padding: 16px; box-shadow: var(--shadow-card);
 }
-.credits-modal__close { position: absolute; top: 6px; right: 8px; background: transparent; border: 0; font-size: 22px; cursor: pointer; }
-.credits-modal h3 { margin-top: 0; }
-.credits-modal p { margin: 8px 0; font-size: 13px; color: #333; }
+.credits-modal__close { position: absolute; top: 6px; right: 8px; background: transparent; border: 0; font-size: 22px; cursor: pointer; color: var(--text-muted); }
+.credits-modal h3 { margin-top: 0; color: var(--text); }
+.credits-modal p { margin: 8px 0; font-size: 13px; color: var(--text); }
+
+.theme-toggle {
+  display: inline-flex; align-items: center; gap: 8px;
+  margin-top: 12px;
+  background: var(--chip-bg); border: 0; padding: 8px 14px; border-radius: 999px;
+  cursor: pointer; color: var(--text); font: inherit;
+}

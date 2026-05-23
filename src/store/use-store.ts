@@ -17,6 +17,15 @@ type State = {
   setSelectedId: (id: string | null) => void;
   buildingIndex: BuildingIndex | null;
   setBuildingIndex: (i: BuildingIndex | null) => void;
+  // Filtri lista
+  search: string;
+  setSearch: (s: string) => void;
+  minTables: number;
+  setMinTables: (n: number) => void;
+  showShade: boolean;
+  setShowShade: (v: boolean) => void;
+  theme: 'light' | 'dark' | null;
+  setTheme: (t: 'light' | 'dark' | null) => void;
 };
 
 export const useStore = create<State>((set) => ({
@@ -32,4 +41,22 @@ export const useStore = create<State>((set) => ({
   setSelectedId: (selectedId) => set({ selectedId }),
   buildingIndex: null,
   setBuildingIndex: (buildingIndex) => set({ buildingIndex }),
+  search: '',
+  setSearch: (search) => set({ search }),
+  minTables: 0,
+  setMinTables: (minTables) => set({ minTables }),
+  showShade: false,
+  setShowShade: (showShade) => set({ showShade }),
+  theme: (typeof localStorage !== 'undefined' && (localStorage.getItem('theme') as 'light' | 'dark' | null)) || null,
+  setTheme: (theme) => {
+    if (typeof localStorage !== 'undefined') {
+      if (theme) localStorage.setItem('theme', theme);
+      else localStorage.removeItem('theme');
+    }
+    if (typeof document !== 'undefined') {
+      if (theme) document.documentElement.setAttribute('data-theme', theme);
+      else document.documentElement.removeAttribute('data-theme');
+    }
+    set({ theme });
+  },
 }));

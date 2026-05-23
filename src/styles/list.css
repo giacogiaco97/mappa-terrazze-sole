@@ -1,8 +1,39 @@
-.list { display: flex; flex-direction: column; gap: 6px; }
-.row { display: flex; align-items: stretch; gap: 8px; padding: 8px 0; border-bottom: 1px solid #f0f0f0; }
-.row__main { flex: 1; display: flex; gap: 12px; align-items: center; background: transparent; border: 0; padding: 6px 4px; text-align: left; cursor: pointer; }
+.list-wrap { display: flex; flex-direction: column; gap: 8px; }
+
+.filters {
+  position: sticky; top: 0; z-index: 1;
+  background: var(--bg-elev, white);
+  padding: 4px 0 8px;
+  display: flex; flex-direction: column; gap: 6px;
+  border-bottom: 1px solid var(--border, #f0f0f0);
+}
+.filters__search {
+  width: 100%; padding: 8px 12px; font-size: 15px;
+  border-radius: 999px; border: 1px solid var(--border, #ddd);
+  background: var(--bg-input, #f7f7f7); color: var(--text, #222);
+}
+.filters__row {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  font-size: 13px; color: var(--text-muted, #555);
+}
+.filters__chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--chip-bg, #f0f0f0); padding: 4px 10px; border-radius: 999px;
+  cursor: pointer; user-select: none;
+}
+.filters__chip select {
+  border: 0; background: transparent; font: inherit; color: inherit; cursor: pointer;
+}
+.filters__count { margin-left: auto; font-weight: 700; color: var(--text, #222); }
+
+.list { display: flex; flex-direction: column; gap: 4px; }
+.list__empty { padding: 20px 4px; color: var(--text-muted, #777); font-size: 14px; text-align: center; }
+.list__sentinel { height: 1px; }
+
+.row { display: flex; align-items: stretch; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--border, #f0f0f0); }
+.row__main { flex: 1; display: flex; gap: 12px; align-items: center; background: transparent; border: 0; padding: 6px 4px; text-align: left; cursor: pointer; color: inherit; }
 .row__status { font-size: 22px; width: 32px; text-align: center; flex-shrink: 0; }
 .row__text { display: flex; flex-direction: column; min-width: 0; flex: 1; }
-.row__name { font-size: 15px; font-weight: 600; color: #222; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.row__meta { font-size: 12px; color: #666; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row__name { font-size: 15px; font-weight: 600; color: var(--text, #222); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row__meta { font-size: 12px; color: var(--text-muted, #666); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .row__maps { display: flex; align-items: center; justify-content: center; min-width: 44px; height: 44px; text-decoration: none; font-size: 22px; flex-shrink: 0; }

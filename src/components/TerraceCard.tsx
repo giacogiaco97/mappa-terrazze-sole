@@ -10,6 +10,7 @@ import { getShadeConfidence } from '../lib/shade-confidence.js';
 import { useModalDismiss } from '../lib/use-modal-dismiss.js';
 import { computeSunTimeline, type TimelineState } from '../lib/sun-timeline.js';
 import SunTimeline from './SunTimeline.js';
+import TerraceMiniMap from './TerraceMiniMap.js';
 import { t } from '../i18n/i18n.js';
 import '../styles/card.css';
 
@@ -162,6 +163,8 @@ export default function TerraceCard() {
           </div>
         )}
       </section>
+
+      <TerraceMiniMap lat={t1.lat} lng={t1.lng} />
 
       <p
         className={`card__confidence card__confidence--${confidence}`}

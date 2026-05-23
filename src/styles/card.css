@@ -219,6 +219,24 @@
   grid-template-columns: repeat(2, 1fr);
 }
 
+/* === Mini-map satellitare (ESRI World Imagery) === */
+.card__map {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  background: var(--bg-input);
+  position: relative;
+  overflow: hidden;
+}
+/* Compact attribution (MapLibre la posiziona nel canvas) */
+.card__map .maplibregl-ctrl-attrib {
+  font-size: 10px;
+  background: rgba(255,255,255,0.7);
+  border-radius: 4px 0 0 0;
+  padding: 0 4px;
+}
+.card__map .maplibregl-ctrl-bottom-left,
+.card__map .maplibregl-ctrl-bottom-right { z-index: 1; }
+
 /* === Confidence === */
 .card__confidence {
   margin: 0 20px 8px;

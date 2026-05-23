@@ -1,3 +1,9 @@
+import MapView from './components/MapView.js';
+
 export default function App() {
-  return <div className="app-root">Mappa delle terrazze al sole — Session 2 in costruzione</div>;
+  return (
+    <div className="app-root">
+      <MapView />
+    </div>
+  );
 }

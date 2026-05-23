@@ -58,8 +58,20 @@ export default function App() {
       if (cancelled) return;
 
       setBuildingIndex(index);
-      const newStates = computeAllStates(list, now, index);
-      setStates(newStates);
+      // computeAllStates esegue raycasting su ~6900 terrazze: deferred a idle time
+      // per non bloccare il main thread durante il LCP / TTI.
+      const compute = () => {
+        if (cancelled) return;
+        const newStates = computeAllStates(list, now, index);
+        if (!cancelled) setStates(newStates);
+      };
+      if ('requestIdleCallback' in window) {
+        (window as Window & typeof globalThis & {
+          requestIdleCallback: (cb: () => void, opts?: { timeout?: number }) => number;
+        }).requestIdleCallback(compute, { timeout: 1500 });
+      } else {
+        setTimeout(compute, 0);
+      }
     };
     // `onMapReady` è invocato dopo l'evento `load`, quindi la mappa è già pronta.
     // Caricare immediatamente evita di dipendere da `idle`, che può non scattare

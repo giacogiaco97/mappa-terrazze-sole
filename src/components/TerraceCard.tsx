@@ -5,6 +5,7 @@ import { haversineMeters } from '../lib/geometry.js';
 import { sunnyUntil } from '../lib/sunny-until.js';
 import { getSunPosition } from '../lib/sun.js';
 import { isInSun } from '../lib/shadow-engine.js';
+import { useModalDismiss } from '../lib/use-modal-dismiss.js';
 import { t } from '../i18n/i18n.js';
 import '../styles/card.css';
 
@@ -16,6 +17,8 @@ export default function TerraceCard() {
   const selectedId = useStore((s) => s.selectedId);
   const setSelectedId = useStore((s) => s.setSelectedId);
   const buildingIndex = useStore((s) => s.buildingIndex);
+
+  useModalDismiss(!!selectedId, () => setSelectedId(null));
 
   if (!selectedId) return null;
   const t1 = terraces.find((x) => x.id === selectedId);

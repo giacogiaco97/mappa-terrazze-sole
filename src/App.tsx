@@ -16,6 +16,10 @@ import { computeAllStates } from './lib/compute-states.js';
 import { t } from './i18n/i18n.js';
 import type { Building } from './types/index.js';
 
+type IdleWindow = Window & typeof globalThis & {
+  requestIdleCallback?: (cb: () => void, opts?: { timeout?: number }) => number;
+};
+
 export default function App() {
   const [map, setMap] = useState<MLMap | null>(null);
   const geo = useGeolocation();
@@ -26,8 +30,10 @@ export default function App() {
   const setBuildingIndex = useStore((s) => s.setBuildingIndex);
   const now = useStore((s) => s.now);
   const states = useStore((s) => s.states);
+  const terraces = useStore((s) => s.terraces);
+  const buildingIndex = useStore((s) => s.buildingIndex);
 
-  // Geolocalizzazione → centra mappa (solo se l'utente è dentro BCN)
+  // 1) Geolocalizzazione → centra mappa (solo se l'utente è dentro BCN)
   useEffect(() => {
     if (geo.status === 'ok' && map) {
       setUserPos({ lat: geo.lat, lng: geo.lng });
@@ -37,15 +43,15 @@ export default function App() {
     }
   }, [geo, map, setUserPos]);
 
-  // Carica terrazze + chunk edifici per il viewport + calcola stati
+  // 2) Carica terrazze + chunk edifici UNA VOLTA quando la mappa è pronta.
+  //    Separato dal ricalcolo states per evitare reload completo a ogni cambio `now`.
   useEffect(() => {
     if (!map) return;
     let cancelled = false;
-    const run = async () => {
+    const load = async () => {
       const [list, meta] = await Promise.all([loadTerraces(), loadMeta()]);
       if (cancelled) return;
       setTerraces(list);
-
       const b = map.getBounds();
       const cells = cellsForBbox(
         [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()],
@@ -54,31 +60,38 @@ export default function App() {
       );
       const chunks = await Promise.all(cells.map((k) => loadBuildingChunk(k)));
       const allBuildings: Building[] = chunks.flat();
-      const index = buildBuildingIndex(allBuildings);
       if (cancelled) return;
+      setBuildingIndex(buildBuildingIndex(allBuildings));
+    };
+    load();
+    return () => { cancelled = true; };
+  }, [map, setTerraces, setBuildingIndex]);
 
-      setBuildingIndex(index);
-      // computeAllStates esegue raycasting su ~6900 terrazze: deferred a idle time
-      // per non bloccare il main thread durante il LCP / TTI.
-      const compute = () => {
-        if (cancelled) return;
-        const newStates = computeAllStates(list, now, index);
-        if (!cancelled) setStates(newStates);
-      };
-      if ('requestIdleCallback' in window) {
-        (window as Window & typeof globalThis & {
-          requestIdleCallback: (cb: () => void, opts?: { timeout?: number }) => number;
-        }).requestIdleCallback(compute, { timeout: 1500 });
-      } else {
-        setTimeout(compute, 0);
+  // 3) Ricomputa states quando cambia now / terraces / buildingIndex.
+  //    Veloce: solo raycasting su dati già caricati. requestIdleCallback per non
+  //    bloccare il main thread durante interazioni rapide (es. drag dello slider).
+  useEffect(() => {
+    if (!terraces.length || !buildingIndex) return;
+    let cancelled = false;
+    const compute = () => {
+      if (cancelled) return;
+      setStates(computeAllStates(terraces, now, buildingIndex));
+    };
+    const w = window as IdleWindow;
+    let handle: number | undefined;
+    if (w.requestIdleCallback) {
+      handle = w.requestIdleCallback(compute, { timeout: 600 });
+    } else {
+      handle = window.setTimeout(compute, 0);
+    }
+    return () => {
+      cancelled = true;
+      if (handle !== undefined && 'cancelIdleCallback' in window) {
+        (window as Window & typeof globalThis & { cancelIdleCallback: (h: number) => void })
+          .cancelIdleCallback(handle);
       }
     };
-    // `onMapReady` è invocato dopo l'evento `load`, quindi la mappa è già pronta.
-    // Caricare immediatamente evita di dipendere da `idle`, che può non scattare
-    // se i tile della basemap tardano (succede in ambienti headless / connessioni lente).
-    run();
-    return () => { cancelled = true; };
-  }, [map, now, setTerraces, setStates, setBuildingIndex]);
+  }, [now, terraces, buildingIndex, setStates]);
 
   const sunnyCount = Object.values(states).filter((s) => s === 'sun').length;
 
@@ -92,10 +105,10 @@ export default function App() {
       {map && <Markers map={map} />}
       <TimeSlider />
       {geo.status === 'denied' && (
-        <div className="edge-banner">{t('geoDenied')}</div>
+        <div className="edge-banner" role="status">{t('geoDenied')}</div>
       )}
       {outsideBcn && (
-        <div className="edge-banner">{t('outsideBcn')}</div>
+        <div className="edge-banner" role="status">{t('outsideBcn')}</div>
       )}
       <BottomSheet collapsedLabel={t('sunnyNearby', { count: sunnyCount })}>
         <TerraceList onSelectTerrace={setSelectedId} />

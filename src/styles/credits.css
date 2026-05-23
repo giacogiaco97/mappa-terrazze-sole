@@ -6,11 +6,19 @@
   z-index: 3;
   cursor: pointer;
 }
+.credits-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.25);
+  z-index: 8;
+  display: flex; align-items: flex-start; justify-content: center;
+  padding-top: 72px;
+}
 .credits-modal {
-  position: absolute; left: 16px; right: 16px; top: 80px;
+  position: relative;
+  margin: 0 16px;
+  max-width: 480px; width: 100%;
   background: white; border-radius: 14px;
   padding: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-  z-index: 8;
 }
 .credits-modal__close { position: absolute; top: 6px; right: 8px; background: transparent; border: 0; font-size: 22px; cursor: pointer; }
 .credits-modal h3 { margin-top: 0; }

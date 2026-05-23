@@ -16,24 +16,25 @@ export default function Markers({ map }: Props) {
   const states = useStore((s) => s.states);
 
   useEffect(() => {
-    if (!map.isStyleLoaded()) return;
     const sourceId = 'terraces-src';
     const layerId = 'terraces-layer';
 
-    const features = terraces.map((t) => ({
-      type: 'Feature' as const,
-      geometry: { type: 'Point' as const, coordinates: [t.lng, t.lat] },
-      properties: {
-        id: t.id,
-        status: states[t.id] ?? 'pending',
-      },
-    }));
-    const geojson = { type: 'FeatureCollection' as const, features };
+    const upsert = () => {
+      const features = terraces.map((t) => ({
+        type: 'Feature' as const,
+        geometry: { type: 'Point' as const, coordinates: [t.lng, t.lat] },
+        properties: {
+          id: t.id,
+          status: states[t.id] ?? 'pending',
+        },
+      }));
+      const geojson = { type: 'FeatureCollection' as const, features };
 
-    const existing = map.getSource(sourceId) as maplibregl.GeoJSONSource | undefined;
-    if (existing) {
-      existing.setData(geojson);
-    } else {
+      const existing = map.getSource(sourceId) as maplibregl.GeoJSONSource | undefined;
+      if (existing) {
+        existing.setData(geojson);
+        return;
+      }
       map.addSource(sourceId, { type: 'geojson', data: geojson });
       map.addLayer({
         id: layerId,
@@ -61,6 +62,12 @@ export default function Markers({ map }: Props) {
       });
       map.on('mouseenter', layerId, () => { map.getCanvas().style.cursor = 'pointer'; });
       map.on('mouseleave', layerId, () => { map.getCanvas().style.cursor = ''; });
+    };
+
+    if (map.isStyleLoaded()) {
+      upsert();
+    } else {
+      map.once('load', upsert);
     }
   }, [map, terraces, states]);
 

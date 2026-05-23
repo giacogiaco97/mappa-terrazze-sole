@@ -61,7 +61,10 @@ export default function App() {
       const newStates = computeAllStates(list, now, index);
       setStates(newStates);
     };
-    map.once('idle', run);
+    // `onMapReady` è invocato dopo l'evento `load`, quindi la mappa è già pronta.
+    // Caricare immediatamente evita di dipendere da `idle`, che può non scattare
+    // se i tile della basemap tardano (succede in ambienti headless / connessioni lente).
+    run();
     return () => { cancelled = true; };
   }, [map, now, setTerraces, setStates, setBuildingIndex]);
 

@@ -24,7 +24,10 @@ export default function MapView({ onMapReady }: Props) {
       attributionControl: { compact: true },
     });
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
-    map.on('load', () => onMapReady?.(map));
+    // Notifichiamo immediatamente: i consumer (Markers, App) sono responsabili di
+    // attendere isStyleLoaded() prima di chiamare addSource/addLayer. Questo evita
+    // di restare bloccati se l'evento 'load' tarda (ambienti headless, tile lenti).
+    onMapReady?.(map);
     mapRef.current = map;
     return () => { map.remove(); mapRef.current = null; };
   }, [onMapReady]);

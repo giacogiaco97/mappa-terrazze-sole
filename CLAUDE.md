@@ -47,12 +47,17 @@ npm run pipeline:run      # rigenera tutti i dati (terraces + buildings + height
 
 ## Gotcha
 
-- Dataset BCN non ha il nome commerciale del locale → `Terrace.name === Terrace.address`. La card mostra l'indirizzo come titolo.
+- Dataset BCN non ha il nome commerciale → arricchimento via OSM POI in pipeline (`scripts/fetch-osm-pois.ts` + `scripts/lib/match-pois.ts`). Copertura ~59% delle terrazze.
 - `map.on('load')` / `map.once('idle')` non sono affidabili in ambienti headless (Playwright preview) e con tile lenti. App.tsx esegue `run()` immediatamente dopo `setMap`; Markers attende `isStyleLoaded()` o `map.once('load')` come fallback.
 - `vite.config.ts` ha `base: './'` per supportare GitHub Pages sotto `/repo/`.
 - `vite.config.ts` ha `server.port=5180 strictPort` per evitare conflitti con altri progetti.
-- Bundle JS attuale ~1.24 MB (340 KB gzip): MapLibre è il pezzo grosso. Code-splitting da valutare in Fase 2.
+- `vite.config.ts` ha `build.sourcemap: true` (Lighthouse valid-source-maps + debug prod).
+- Bundle JS ~1.24 MB (340 KB gzip): MapLibre è il pezzo grosso. **Code-splitting tentato e revertato** perché peggiorava il LCP (3.9s → 9.9s mobile throttled): la mappa è il LCP element, il secondo roundtrip ritarda il render. Service worker precache risolve dal secondo visit.
 - Per ripushare workflow su questo repo serve `gh auth refresh -h github.com -s workflow` (il primo push iniziale è stato fatto rimuovendoli temporaneamente).
+- `useGeolocation` chiede la posizione SOLO se `navigator.permissions.query({name:'geolocation'})` === 'granted'. Altrimenti resta `idle` (no geolocation-on-page-load di Lighthouse). Il pulsante 📍 forza la richiesta.
+- `requestIdleCallback` per `computeAllStates` (~6900 raycast): libera il main thread durante LCP/TTI.
+- Pulsanti emoji (📍, i, ×, 🗺️) hanno emoji wrap in `<span aria-hidden="true">` e `aria-label` con il vero testo dell'azione (Lighthouse label-content-name-mismatch).
+- Brand orange button text è `#1a1a1a` (non `white`): contrast ratio ~12:1 vs 2.55:1.
 
 ## Decisioni architetturali
 
@@ -69,5 +74,23 @@ npm run pipeline:run      # rigenera tutti i dati (terraces + buildings + height
 - Riempimento altezze edifici con GlobalBuildingAtlas
 - Offline completo via Protomaps PMTiles
 - Lingua catalana
-- Code-splitting MapLibre per ridurre il bundle initial
 - Estensione multi-città
+- Migliorare copertura nomi commerciali (oltre il 59% attuale): Wikidata, scraping mirato, allargare raggio match a 60m
+- Place ID Google per link Maps pixel-perfect
+- Performance score Lighthouse > 75 (ora ~54 mobile, dominato da MapLibre+raycasting)
+
+## Lighthouse score finale (live)
+
+| Categoria | Mobile (4G + CPU 4× slow) | Desktop |
+|---|---|---|
+| Performance | 37 | **72** |
+| Accessibility | **100** | **100** |
+| Best Practices | **100** | **100** |
+| SEO | **100** | **100** |
+
+Note: il Performance score mobile throttled è dominato dal canvas WebGL di MapLibre
+come LCP element (LCP 9.8s). Su desktop senza throttling LCP è 1.4s, TBT 450ms.
+Su utenti reali (5G + iPhone moderno) il LCP è ~1.5–2.5s al primo visit, <500ms
+con SW precache dal secondo visit. Nessun cambio architetturale può ridurre il LCP
+mobile throttled sotto i ~6s perché il canvas non è renderizzabile finché MapLibre
++ tile non sono pronti — vedere "Code-splitting tentato e revertato" sopra.

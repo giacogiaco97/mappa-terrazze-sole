@@ -1,0 +1,21 @@
+{
+  "name": "mappa-terrazze-sole",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "pipeline:terraces": "tsx scripts/fetch-terraces.ts",
+    "pipeline:buildings": "tsx scripts/fetch-buildings.ts",
+    "pipeline:heights": "tsx scripts/resolve-heights.ts",
+    "pipeline:build": "tsx scripts/build-output.ts",
+    "pipeline:run": "npm run pipeline:terraces && npm run pipeline:buildings && npm run pipeline:heights && npm run pipeline:build"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.1",
+    "tsx": "^4.22.3",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.7"
+  }
+}

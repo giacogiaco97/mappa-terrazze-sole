@@ -1,0 +1,13 @@
+{
+  "city": "Barcelona",
+  "bbox": [
+    2.07,
+    41.32,
+    2.23,
+    41.47
+  ],
+  "generatedAt": "2026-05-23T09:19:31.346Z",
+  "gridStep": 0.01,
+  "buildingCount": 88620,
+  "terraceCount": 6899
+}

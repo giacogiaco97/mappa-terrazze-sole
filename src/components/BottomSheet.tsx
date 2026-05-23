@@ -41,7 +41,7 @@ export default function BottomSheet({ collapsedLabel, children }: Props) {
         aria-expanded={expanded}
       >
         <span className="bottom-sheet__bar" aria-hidden="true" />
-        <span className="bottom-sheet__label">{collapsedLabel}</span>
+        <span className="bottom-sheet__label" aria-live="polite">{collapsedLabel}</span>
       </button>
       <div className="bottom-sheet__content">{children}</div>
     </div>

@@ -32,5 +32,8 @@
   "onboardingSliderHint": "Drag the time slider at the top to see how shadows change.",
   "onboardingCta": "Get started",
   "updateAvailable": "New version available",
-  "updateApply": "Update"
+  "updateApply": "Update",
+  "sunrise": "Sunrise",
+  "resetToNow": "Back to now",
+  "timeSliderLabel": "Move in time"
 }

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useStore } from '../store/use-store.js';
-import { getTimes } from '../lib/sun.js';
+import { getTimes, getSunPosition } from '../lib/sun.js';
 import { t } from '../i18n/i18n.js';
 import '../styles/time-slider.css';
 
@@ -16,7 +16,15 @@ export default function TimeSlider() {
   const realNow = new Date();
   const [valueMin, setValueMin] = useState(0);
 
-  const sunset = getTimes(realNow, BCN.lat, BCN.lng).sunset;
+  const times = getTimes(realNow, BCN.lat, BCN.lng);
+  const sunset = times.sunset;
+  const sunrise = times.sunrise;
+  // Alba del giorno dopo (se il sole è già tramontato)
+  const tomorrow = new Date(realNow.getTime() + 24 * 60 * 60_000);
+  const sunriseTomorrow = getTimes(tomorrow, BCN.lat, BCN.lng).sunrise;
+  const sunAltitudeRad = getSunPosition(now, BCN.lat, BCN.lng).altitude;
+  const isNight = sunAltitudeRad <= 0;
+  const nextSunrise = now.getTime() < sunrise.getTime() ? sunrise : sunriseTomorrow;
 
   useEffect(() => {
     const delta = Math.round((now.getTime() - realNow.getTime()) / 60_000);
@@ -36,11 +44,22 @@ export default function TimeSlider() {
     setValueMin(0);
   };
 
+  // Etichetta tramonto/alba a destra: a seconda dell'orario corrente
+  const rightLabel = isNight
+    ? `${t('sunrise')} ${formatHM(nextSunrise)}`
+    : `${t('sunset')} ${formatHM(sunset)}`;
+
   return (
     <div className="time-slider">
       <div className="time-slider__row">
-        <button className="time-slider__now" onClick={reset}>{t('now')} {formatHM(now)}</button>
-        <span className="time-slider__sunset">{t('sunset')} {formatHM(sunset)}</span>
+        <button
+          className="time-slider__now"
+          onClick={reset}
+          aria-label={`${t('resetToNow')} (${formatHM(now)})`}
+        >
+          {t('now')} {formatHM(now)}
+        </button>
+        <span className="time-slider__sunset">{rightLabel}</span>
       </div>
       <input
         type="range"
@@ -49,7 +68,8 @@ export default function TimeSlider() {
         step={10}
         value={valueMin}
         onChange={onChange}
-        aria-label="time offset"
+        aria-label={t('timeSliderLabel')}
+        aria-valuetext={`${t('now')} ${formatHM(now)}`}
       />
     </div>
   );

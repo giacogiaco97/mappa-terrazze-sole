@@ -1,6 +1,15 @@
 import { useEffect } from 'react';
 import { useStore } from '../store/use-store.js';
 
+function tryLocate(): void {
+  if (!('geolocation' in navigator)) return;
+  navigator.geolocation.getCurrentPosition(
+    (p) => useStore.getState().setUserPos({ lat: p.coords.latitude, lng: p.coords.longitude }),
+    () => undefined,
+    { enableHighAccuracy: true, timeout: 8000 },
+  );
+}
+
 /**
  * Sincronizza `selectedId` con il query parameter `?id=...`.
  * - Al mount: legge `?id=` e setta selectedId.
@@ -16,6 +25,12 @@ export function useUrlSync(): void {
     const url = new URL(window.location.href);
     const id = url.searchParams.get('id');
     if (id) setSelectedId(id);
+    // PWA shortcut `?action=locate` → forza geolocation
+    if (url.searchParams.get('action') === 'locate') {
+      tryLocate();
+      url.searchParams.delete('action');
+      window.history.replaceState(null, '', url.toString());
+    }
     const onPop = () => {
       const u = new URL(window.location.href);
       setSelectedId(u.searchParams.get('id'));

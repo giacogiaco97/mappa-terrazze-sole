@@ -32,5 +32,8 @@
   "onboardingSliderHint": "Arrastra el control de tiempo arriba para ver cómo cambian las sombras.",
   "onboardingCta": "Empezar",
   "updateAvailable": "Nueva versión disponible",
-  "updateApply": "Actualizar"
+  "updateApply": "Actualizar",
+  "sunrise": "Amanecer",
+  "resetToNow": "Volver a ahora",
+  "timeSliderLabel": "Mover en el tiempo"
 }

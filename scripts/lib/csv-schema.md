@@ -26,9 +26,11 @@ Conteggio righe totale (incluso header): ~6901 → ~6900 record.
 ## Mappatura → tipo `Terrace`
 
 Il dataset ufficiale **non contiene il nome commerciale del locale**: è un registro amministrativo
-delle autorizzazioni. Usiamo `EMPLACAMENT` (l'indirizzo dell'autorizzazione) sia come `name` che
-come `address`. In Fase 3 il piano prevede di arricchire con OSM (`amenity=cafe|restaurant`) per
-ottenere i nomi commerciali.
+delle autorizzazioni. Usiamo `EMPLACAMENT` (l'indirizzo dell'autorizzazione) come `address`.
+Per `name` la pipeline arricchisce con i POI OpenStreetMap più vicini entro 30 m
+(amenity restaurant/bar/cafe/pub/fast_food/biergarten/ice_cream/food_court + shop bakery/coffee/deli/pastry/confectionery).
+Vedi `scripts/fetch-osm-pois.ts` e `scripts/lib/match-pois.ts`. Copertura attuale: ~59% delle terrazze ottiene un nome.
+Le altre cadono in fallback `name === address` (l'UI mostra solo il titolo, niente riga indirizzo duplicata).
 
 Inoltre **non esiste una colonna `ID`** stabile: generiamo `T-${i}` dall'indice di riga del CSV.
 Una alternativa più robusta sarebbe hashare `lat,lng,EMPLACAMENT` — ma per l'MVP l'indice basta.

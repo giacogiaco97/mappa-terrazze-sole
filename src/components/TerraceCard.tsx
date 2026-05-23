@@ -37,7 +37,9 @@ export default function TerraceCard() {
     <div className="card" role="dialog" aria-modal="true">
       <button className="card__close" onClick={() => setSelectedId(null)} aria-label="close">×</button>
       <h2 className="card__title">{t1.name || t1.address}</h2>
-      <p className="card__address">{t1.address}</p>
+      {t1.name && t1.name !== t1.address && (
+        <p className="card__address">{t1.address}</p>
+      )}
       <p className={`card__status card__status--${status}`}>
         {status === 'sun' && '☀️'} {status === 'shade' && '🌫️'} {status === 'closed' && '🌙'} {t1.tables ? t('tables', { n: t1.tables }) : ''}
       </p>

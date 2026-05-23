@@ -1,0 +1,36 @@
+name: Data Pipeline
+
+on:
+  schedule:
+    - cron: '0 4 1 * *'   # primo del mese, 04:00 UTC
+  workflow_dispatch:
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Run pipeline
+        run: npm run pipeline:run
+
+      - name: Commit data updates
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/data
+          if git diff --cached --quiet; then
+            echo "Nessuna variazione nei dati."
+          else
+            git commit -m "data: refresh automatico pipeline ($(date -u +%Y-%m-%d))"
+            git push
+          fi

@@ -86,8 +86,27 @@ async function main(): Promise<void> {
   };
   await writeFile(`${OUT_DIR}/meta.json`, JSON.stringify(meta, null, 2));
 
+  // Sanity check: fail forte se la pipeline produce dati palesemente sbagliati.
+  if (terraces.length < 1000) {
+    throw new Error(`Pipeline output sospetto: solo ${terraces.length} terrazze (< 1000). Aborting.`);
+  }
+  if (buildings.length < 10_000) {
+    throw new Error(`Pipeline output sospetto: solo ${buildings.length} edifici (< 10000). Aborting.`);
+  }
+  const noName = terraces.filter((tr) => tr.name === tr.address).length;
+  const coverage = ((terraces.length - noName) / terraces.length) * 100;
+  if (coverage < 40) {
+    throw new Error(`Pipeline output sospetto: copertura nomi POI ${coverage.toFixed(1)}% (< 40%). Verifica fetch POI.`);
+  }
+  const outsideBbox = terraces.filter((tr) =>
+    tr.lng < BCN_BBOX[0] || tr.lng > BCN_BBOX[2] ||
+    tr.lat < BCN_BBOX[1] || tr.lat > BCN_BBOX[3]);
+  if (outsideBbox.length > 0) {
+    throw new Error(`Pipeline output sospetto: ${outsideBbox.length} terrazze fuori dal bbox BCN.`);
+  }
+
   console.log(
-    `Output scritto in ${OUT_DIR}: ${terraces.length} terrazze, ${buildings.length} edifici in ${Object.keys(chunks).length} celle.`,
+    `Output scritto in ${OUT_DIR}: ${terraces.length} terrazze, ${buildings.length} edifici in ${Object.keys(chunks).length} celle. Copertura nomi: ${coverage.toFixed(1)}%.`,
   );
 }
 

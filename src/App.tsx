@@ -6,6 +6,7 @@ import TimeSlider from './components/TimeSlider.js';
 import BottomSheet from './components/BottomSheet.js';
 import TerraceList from './components/TerraceList.js';
 import TerraceCard from './components/TerraceCard.js';
+import GeolocateButton from './components/GeolocateButton.js';
 import { useGeolocation } from './lib/use-geolocation.js';
 import { useStore } from './store/use-store.js';
 import { loadTerraces, loadMeta, loadBuildingChunk, cellsForBbox } from './lib/data-loader.js';
@@ -74,6 +75,7 @@ export default function App() {
         <TerraceList onSelectTerrace={setSelectedId} />
       </BottomSheet>
       <TerraceCard />
+      <GeolocateButton map={map} />
     </div>
   );
 }

@@ -1,5 +1,6 @@
+import { useMemo } from 'react';
 import { useStore } from '../store/use-store.js';
-import { googleMapsUrl } from '../lib/google-maps.js';
+import { googleMapsUrl, streetViewUrl } from '../lib/google-maps.js';
 import { walkingMinutes } from '../lib/walking-time.js';
 import { haversineMeters } from '../lib/geometry.js';
 import { sunnyUntil } from '../lib/sunny-until.js';
@@ -7,8 +8,23 @@ import { getSunPosition } from '../lib/sun.js';
 import { isInSun } from '../lib/shadow-engine.js';
 import { getShadeConfidence } from '../lib/shade-confidence.js';
 import { useModalDismiss } from '../lib/use-modal-dismiss.js';
+import { computeSunTimeline, type TimelineState } from '../lib/sun-timeline.js';
+import SunTimeline from './SunTimeline.js';
 import { t } from '../i18n/i18n.js';
 import '../styles/card.css';
+
+function formatHours(minutes: number): string {
+  if (minutes <= 0) return '0h';
+  const h = Math.floor(minutes / 60);
+  const m = Math.round(minutes - h * 60);
+  if (h === 0) return `${m}m`;
+  if (m === 0) return `${h}h`;
+  return `${h}h ${m}m`;
+}
+
+function formatTime(d: Date): string {
+  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
 
 export default function TerraceCard() {
   const terraces = useStore((s) => s.terraces);
@@ -21,8 +37,24 @@ export default function TerraceCard() {
 
   useModalDismiss(!!selectedId, () => setSelectedId(null));
 
-  if (!selectedId) return null;
-  const t1 = terraces.find((x) => x.id === selectedId);
+  const t1 = useMemo(
+    () => (selectedId ? terraces.find((x) => x.id === selectedId) ?? null : null),
+    [terraces, selectedId],
+  );
+
+  const timeline = useMemo(() => {
+    if (!t1 || !buildingIndex) return null;
+    return computeSunTimeline(
+      now,
+      (d): TimelineState => {
+        const sun = getSunPosition(d, t1.lat, t1.lng);
+        if (sun.altitude <= 0) return 'night';
+        return isInSun(t1.lat, t1.lng, sun, buildingIndex) ? 'sun' : 'shade';
+      },
+      15,
+    );
+  }, [t1, buildingIndex, now]);
+
   if (!t1) return null;
 
   const status = states[t1.id] ?? 'pending';
@@ -39,40 +71,127 @@ export default function TerraceCard() {
 
   const confidence = buildingIndex ? getShadeConfidence(t1.lat, t1.lng, buildingIndex) : 'low';
 
+  const sunPct = timeline && timeline.daylightMinutes > 0
+    ? Math.round((timeline.sunMinutes / timeline.daylightMinutes) * 100)
+    : null;
+
+  const showAddressLine = t1.name && t1.address && t1.name !== t1.address;
+  const subtitle = [showAddressLine ? t1.address : null, t1.neighborhood]
+    .filter(Boolean)
+    .join(' · ');
+
+  const statusLabel =
+    status === 'sun' ? t('statusSunNow') :
+    status === 'shade' ? t('statusShadeNow') :
+    status === 'closed' ? t('statusClosedNow') : '';
+  const statusIcon = status === 'sun' ? '☀️' : status === 'shade' ? '🌫️' : status === 'closed' ? '🌙' : '';
+
   return (
-    <div className="card" role="dialog" aria-modal="true">
+    <div className="card" role="dialog" aria-modal="true" aria-labelledby="card-title">
       <button className="card__close" onClick={() => setSelectedId(null)} aria-label={t('close')}>
         <span aria-hidden="true">×</span>
       </button>
-      <h2 className="card__title">{t1.name || t1.address}</h2>
-      {t1.name && t1.name !== t1.address && (
-        <p className="card__address">{t1.address}</p>
+
+      <header className={`card__hero card__hero--${status}`}>
+        <span className={`card__pill card__pill--${status}`}>
+          <span aria-hidden="true">{statusIcon}</span>
+          <span>{statusLabel}</span>
+        </span>
+        <h2 id="card-title" className="card__title">{t1.name || t1.address}</h2>
+        {subtitle && <p className="card__subtitle">{subtitle}</p>}
+      </header>
+
+      {timeline && (
+        <section className="card__sun" aria-labelledby="card-sun-heading">
+          <div className="card__sun-header">
+            <span id="card-sun-heading" className="card__sun-label">{t('sunToday')}</span>
+            {sunPct != null && (
+              <span className={`card__sun-badge ${sunPct >= 50 ? 'card__sun-badge--good' : ''}`}>
+                <span aria-hidden="true">☀️</span>{' '}
+                {t('sunPercentOfDay', { pct: sunPct })}
+                {' · '}
+                {formatHours(timeline.sunMinutes)}
+              </span>
+            )}
+          </div>
+          <SunTimeline
+            result={timeline}
+            now={now}
+            reference={now}
+            label={`${t('sunToday')}: ${sunPct ?? 0}%`}
+          />
+          {flip && (
+            <p className="card__until">
+              <span aria-hidden="true">☀️</span>{' '}
+              {t('sunnyUntil', { time: formatTime(flip) })}
+            </p>
+          )}
+          {sunPct === 0 && timeline.daylightMinutes > 0 && (
+            <p className="card__hint">{t('allDayShade')}</p>
+          )}
+          {sunPct === 100 && (
+            <p className="card__hint">{t('allDaySun')}</p>
+          )}
+        </section>
       )}
-      <p className={`card__status card__status--${status}`}>
-        {status === 'sun' && '☀️'} {status === 'shade' && '🌫️'} {status === 'closed' && '🌙'} {t1.tables ? t('tables', { n: t1.tables }) : ''}
-      </p>
-      {flip && (
-        <p className="card__until">
-          {t('sunnyUntil', { time: flip.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) })}
-        </p>
-      )}
-      {dist != null && (
-        <p className="card__walk">
-          {Math.round(dist)} m · {t('walkMinutes', { n: walkingMinutes(dist) })}
-        </p>
-      )}
-      <p className={`card__confidence card__confidence--${confidence}`}
-         title={t(`confidence_${confidence}_tip` as 'confidence_high_tip')}>
+
+      <section className="card__stats" aria-label={t('sunToday')}>
+        {t1.tables > 0 && (
+          <div className="card__stat">
+            <span className="card__stat-icon" aria-hidden="true">🍽️</span>
+            <span className="card__stat-value">
+              {t1.tables}{t1.chairs && t1.chairs > 0 ? ` / ${t1.chairs}` : ''}
+            </span>
+            <span className="card__stat-label">
+              {t1.chairs && t1.chairs > 0 ? `${t('tablesCount', { n: t1.tables })} · ${t('chairsCount', { n: t1.chairs })}` : t('tablesCount', { n: t1.tables })}
+            </span>
+          </div>
+        )}
+        {t1.surfaceSqM != null && t1.surfaceSqM > 0 && (
+          <div className="card__stat">
+            <span className="card__stat-icon" aria-hidden="true">📏</span>
+            <span className="card__stat-value">{t1.surfaceSqM}</span>
+            <span className="card__stat-label">{t('surfaceSqm', { n: t1.surfaceSqM })}</span>
+          </div>
+        )}
+        {dist != null && (
+          <div className="card__stat">
+            <span className="card__stat-icon" aria-hidden="true">🚶</span>
+            <span className="card__stat-value">{t('walkMinutes', { n: walkingMinutes(dist) })}</span>
+            <span className="card__stat-label">{Math.round(dist)} m</span>
+          </div>
+        )}
+      </section>
+
+      <p
+        className={`card__confidence card__confidence--${confidence}`}
+        title={t(`confidence_${confidence}_tip` as 'confidence_high_tip')}
+      >
         <span aria-hidden="true">
           {confidence === 'high' ? '✓' : confidence === 'medium' ? '~' : '?'}
         </span>{' '}
         <span>{t(`confidence_${confidence}` as 'confidence_high')}</span>
       </p>
-      <a
-        className="card__cta"
-        href={googleMapsUrl({ name: t1.name, address: t1.address })}
-        target="_blank" rel="noreferrer"
-      >{t('openInGoogleMaps')}</a>
+
+      <div className="card__actions">
+        <a
+          className="card__btn card__btn--primary"
+          href={googleMapsUrl({ name: t1.name, address: t1.address })}
+          target="_blank" rel="noreferrer"
+        >
+          <span aria-hidden="true">🗺️</span>{' '}
+          <span>{t('googleMapsShort')}</span>
+        </a>
+        <a
+          className="card__btn card__btn--secondary"
+          href={streetViewUrl(t1.lat, t1.lng)}
+          target="_blank" rel="noreferrer"
+          aria-label={t('openInStreetView')}
+        >
+          <span aria-hidden="true">📍</span>{' '}
+          <span>{t('streetViewShort')}</span>
+        </a>
+      </div>
     </div>
   );
 }

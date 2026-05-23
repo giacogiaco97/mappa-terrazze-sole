@@ -9,8 +9,11 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      // 'prompt' invece di 'autoUpdate' per dare il controllo all'utente via UpdatePrompt.
-      registerType: 'prompt',
+      // 'autoUpdate' garantisce che gli utenti non restino bloccati su SW vecchi:
+      // workbox skipWaiting+clientsClaim attivano il nuovo SW immediatamente.
+      // UpdatePrompt ascolta controllerchange e mostra un toast per ricaricare la
+      // pagina (così l'utente vede subito il nuovo content senza dover chiudere).
+      registerType: 'autoUpdate',
       includeAssets: [
         'favicon.ico',
         'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-512-maskable.png',
@@ -59,6 +62,11 @@ export default defineConfig({
         ],
       },
       workbox: {
+        // Forza il nuovo SW a prendere il controllo subito (evita utenti bloccati
+        // su SW vecchi che non rispondono al messaggio SKIP_WAITING).
+        skipWaiting: true,
+        clientsClaim: true,
+        cleanupOutdatedCaches: true,
         globPatterns: ['**/*.{js,css,html,svg,png,webmanifest}'],
         runtimeCaching: [
           {

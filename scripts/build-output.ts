@@ -58,7 +58,7 @@ async function main(): Promise<void> {
   await rm(OUT_DIR, { recursive: true, force: true });
   await mkdir(BUILDINGS_DIR, { recursive: true });
 
-  // Scrive terraces.json: omette campi mai usati al runtime (chairs, surfaceSqM)
+  // Scrive terraces.json: include chairs e surfaceSqM (mostrati nella TerraceCard).
   const runtime = terraces.map((tr) => ({
     id: tr.id,
     name: tr.name,
@@ -66,6 +66,8 @@ async function main(): Promise<void> {
     lat: tr.lat,
     lng: tr.lng,
     tables: tr.tables,
+    chairs: tr.chairs ?? 0,
+    surfaceSqM: tr.surfaceSqM ?? 0,
     neighborhood: tr.neighborhood,
   }));
   await writeFile(`${OUT_DIR}/terraces.json`, JSON.stringify(runtime));

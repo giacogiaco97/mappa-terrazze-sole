@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { googleMapsUrl } from '../google-maps.js';
+import { googleMapsUrl, streetViewUrl } from '../google-maps.js';
 
 describe('googleMapsUrl', () => {
   test('usa nome + indirizzo + Barcelona', () => {
@@ -13,5 +13,13 @@ describe('googleMapsUrl', () => {
   test('gestisce nome vuoto fallback su indirizzo', () => {
     const url = googleMapsUrl({ name: '', address: 'Plaça X' });
     expect(url).toContain(encodeURIComponent('Plaça X'));
+  });
+});
+
+describe('streetViewUrl', () => {
+  test('contiene lat/lng e map_action=pano', () => {
+    const url = streetViewUrl(41.39, 2.165);
+    expect(url).toContain('map_action=pano');
+    expect(url).toContain('viewpoint=41.39,2.165');
   });
 });

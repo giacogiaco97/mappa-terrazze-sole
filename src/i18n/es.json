@@ -41,5 +41,19 @@
   "confidence_medium": "Sombra aproximada",
   "confidence_medium_tip": "Altura estimada desde n° de plantas",
   "confidence_low": "Sombra estimada",
-  "confidence_low_tip": "Sin datos de altura: se usa 12 m por defecto"
+  "confidence_low_tip": "Sin datos de altura: se usa 12 m por defecto",
+  "openInStreetView": "Abrir en Street View",
+  "googleMapsShort": "Google Maps",
+  "streetViewShort": "Street View",
+  "sunToday": "Sol hoy",
+  "sunPercentOfDay": "{pct}% del día",
+  "chairsCount": "{n} sillas",
+  "tablesCount": "{n} mesas",
+  "surfaceSqm": "{n} m²",
+  "allDayShade": "Todo el día a la sombra",
+  "allDaySun": "Todo el día al sol",
+  "statusSunNow": "Al sol ahora",
+  "statusShadeNow": "A la sombra",
+  "statusClosedNow": "El sol ya se puso",
+  "shareLocation": "Compartir"
 }

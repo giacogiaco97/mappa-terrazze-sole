@@ -16,6 +16,12 @@
   --sun: #b06b00;
   --shadow-card: 0 8px 32px rgba(0,0,0,0.18);
   --shadow-btn: 0 4px 12px rgba(0,0,0,0.16);
+  --timeline-night: #2a3142;
+  --timeline-sun-start: #ffd23f;
+  --timeline-sun-end: #ff8a00;
+  --timeline-shade: #a8bdd4;
+  --timeline-now: #e63946;
+  --timeline-bg: #ecedf0;
 }
 
 /* === Tema scuro (auto da prefers-color-scheme) === */
@@ -51,6 +57,16 @@
   --sun: #ffcf66;
   --shadow-card: 0 8px 32px rgba(0,0,0,0.6);
   --shadow-btn: 0 4px 12px rgba(0,0,0,0.5);
+  --timeline-night: #0e1019;
+  --timeline-shade: #5a7494;
+  --timeline-bg: #2a2d32;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --timeline-night: #0e1019;
+    --timeline-shade: #5a7494;
+    --timeline-bg: #2a2d32;
+  }
 }
 
 html, body, #root, .app-root {

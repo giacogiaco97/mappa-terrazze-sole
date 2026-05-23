@@ -1,51 +1,35 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { t } from '../i18n/i18n.js';
 import '../styles/update-prompt.css';
 
 /**
- * Mostra un toast quando il service worker ha scaricato un aggiornamento.
- * Click su "Aggiorna" → skipWaiting + reload, che attiva la nuova versione.
+ * Mostra un toast quando il service worker ha attivato un aggiornamento
+ * (con `skipWaiting + clientsClaim` succede al fetch del nuovo SW).
  *
- * vite-plugin-pwa con registerType='autoUpdate' di default aggiorna in
- * background ma non avvisa l'utente. Questo componente comunica esplicitamente
- * "c'è una nuova versione" e dà il consenso all'utente.
+ * Flow:
+ * - `controllerchange` scatta quando il nuovo SW prende il controllo della pagina.
+ * - Mostriamo il toast: "Nuova versione disponibile" + bottone Aggiorna.
+ * - Click su Aggiorna → `location.reload()` → l'utente vede il nuovo content.
+ *
+ * Senza UpdatePrompt l'utente vedrebbe il nuovo content al prossimo refresh
+ * spontaneo (potrebbero passare ore). Questo lo notifica subito.
  */
 export default function UpdatePrompt() {
-  const [needsUpdate, setNeedsUpdate] = useState(false);
-  const [waitingWorker, setWaitingWorker] = useState<ServiceWorker | null>(null);
+  const [needsRefresh, setNeedsRefresh] = useState(false);
+  const isFirstControllerRef = useRef(true);
 
   useEffect(() => {
     if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return;
 
-    const onWaiting = (reg: ServiceWorkerRegistration) => {
-      if (reg.waiting) {
-        setWaitingWorker(reg.waiting);
-        setNeedsUpdate(true);
-      }
-    };
-
-    navigator.serviceWorker.ready.then((reg) => {
-      // SW già in stato 'waiting' al mount?
-      onWaiting(reg);
-      // Nuovo SW installato dopo il mount?
-      reg.addEventListener('updatefound', () => {
-        const nw = reg.installing;
-        if (!nw) return;
-        nw.addEventListener('statechange', () => {
-          if (nw.state === 'installed' && navigator.serviceWorker.controller) {
-            setWaitingWorker(nw);
-            setNeedsUpdate(true);
-          }
-        });
-      });
-    }).catch(() => undefined);
-
-    // Quando il nuovo SW prende il controllo, reload.
-    let didReload = false;
     const onControllerChange = () => {
-      if (didReload) return;
-      didReload = true;
-      window.location.reload();
+      // Il primo controllerchange dopo il page load è il SW che registra il
+      // controllo iniziale (es. dopo lo stato "redundant" → "activated").
+      // Lo ignoriamo per evitare un prompt al primo visit.
+      if (isFirstControllerRef.current) {
+        isFirstControllerRef.current = false;
+        return;
+      }
+      setNeedsRefresh(true);
     };
     navigator.serviceWorker.addEventListener('controllerchange', onControllerChange);
     return () => {
@@ -53,16 +37,12 @@ export default function UpdatePrompt() {
     };
   }, []);
 
-  if (!needsUpdate) return null;
-
-  const apply = () => {
-    waitingWorker?.postMessage({ type: 'SKIP_WAITING' });
-  };
+  if (!needsRefresh) return null;
 
   return (
     <div className="update-prompt" role="status" aria-live="polite">
       <span>{t('updateAvailable')}</span>
-      <button onClick={apply} className="update-prompt__btn">
+      <button onClick={() => window.location.reload()} className="update-prompt__btn">
         {t('updateApply')}
       </button>
     </div>

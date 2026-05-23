@@ -41,5 +41,19 @@
   "confidence_medium": "Shadow approximate",
   "confidence_medium_tip": "Heights estimated from floor count",
   "confidence_low": "Shadow estimated",
-  "confidence_low_tip": "No height data: defaulting to 12 m"
+  "confidence_low_tip": "No height data: defaulting to 12 m",
+  "openInStreetView": "Open in Street View",
+  "googleMapsShort": "Google Maps",
+  "streetViewShort": "Street View",
+  "sunToday": "Sun today",
+  "sunPercentOfDay": "{pct}% of day",
+  "chairsCount": "{n} chairs",
+  "tablesCount": "{n} tables",
+  "surfaceSqm": "{n} m²",
+  "allDayShade": "In shade all day",
+  "allDaySun": "Sunny all day",
+  "statusSunNow": "Sunny now",
+  "statusShadeNow": "In shade",
+  "statusClosedNow": "Sun has set",
+  "shareLocation": "Share"
 }

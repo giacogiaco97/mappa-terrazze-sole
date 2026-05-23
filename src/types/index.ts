@@ -6,9 +6,9 @@ export type Terrace = {
   lng: number;
   tables: number;
   neighborhood: string;
-  /** Solo backend/pipeline: non serializzato in terraces.json runtime. */
+  /** Numero di sedie totali. 0 se assente nel dataset sorgente. */
   chairs?: number;
-  /** Solo backend/pipeline: non serializzato in terraces.json runtime. */
+  /** Superficie occupata in m². 0 se assente nel dataset sorgente. */
   surfaceSqM?: number;
 };
 

@@ -41,5 +41,19 @@
   "confidence_medium": "Ombra aproximada",
   "confidence_medium_tip": "Altura estimada del nombre de plantes",
   "confidence_low": "Ombra estimada",
-  "confidence_low_tip": "Sense dades d'altura: per defecte 12 m"
+  "confidence_low_tip": "Sense dades d'altura: per defecte 12 m",
+  "openInStreetView": "Obrir a Street View",
+  "googleMapsShort": "Google Maps",
+  "streetViewShort": "Street View",
+  "sunToday": "Sol avui",
+  "sunPercentOfDay": "{pct}% del dia",
+  "chairsCount": "{n} cadires",
+  "tablesCount": "{n} taules",
+  "surfaceSqm": "{n} m²",
+  "allDayShade": "Tot el dia a l'ombra",
+  "allDaySun": "Tot el dia al sol",
+  "statusSunNow": "Al sol ara",
+  "statusShadeNow": "A l'ombra",
+  "statusClosedNow": "El sol ja s'ha post",
+  "shareLocation": "Comparteix"
 }

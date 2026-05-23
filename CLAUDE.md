@@ -18,6 +18,7 @@ PWA mobile-first che mostra in tempo reale quali terrazze di Barcellona sono al 
 - **Hotfix Lighthouse/a11y/perf** (2026-05-23) — Mobile A11y 96→100, BP 96→100. Code-splitting MapLibre tentato e revertato (peggiorava LCP). Geolocation gated da permissions.query. requestIdleCallback per computeAllStates.
 - **Audit completo** (2026-05-23) — Fix 24 voci da `docs/audit-2026-05-23.md`: split useEffect (slider lag), modali Escape, cluster marker, deep-link `?id=`, ricerca+filtri, dark mode, infinite scroll, onboarding, compressione dati, SW update prompt, ErrorBoundary, catalano i18n, CSP meta, pipeline validation.
 - **Hardening finale** (2026-05-23) — Coverage v8 (94% statements), confidence ombra (high/medium/low basato su heightSource), PWA screenshots (mobile+desktop), focus trap completo nei modali, analytics Plausible opzionale (env var), E2E Playwright (6 test smoke).
+- **Redesign TerraceCard** (2026-05-23) — Card ridisegnata mobile-first ispirata ai competitor (jveuxdusoleil.fr) ma più moderna. Nuovo lib `sun-timeline` (TDD) che pre-calcola 24h di stati sole/ombra/notte; nuovo componente `SunTimeline` (SVG con gradient sole + marker tempo corrente). Card ora mostra: pill stato con tinta gradient, neighborhood inline, badge "% del día · h" calcolato, timeline bar 24h con tick 0h/6h/12h/18h/24h, stats grid (tavoli/sedie, m², distanza+walking) con `:has()` adattivo 1-3 colonne, confidence pill esistente, 2 CTA (Google Maps + Street View). Aggiunto `streetViewUrl(lat,lng)` in `google-maps.ts`. Runtime `terraces.json` espanso con `chairs` e `surfaceSqM` (era omesso prima, +170KB / +7KB gzip). 11 nuove chiavi i18n in ES/EN/CA. Bundle: 1.26MB / 347KB gzip.
 
 ## Layout file
 
@@ -35,7 +36,7 @@ PWA mobile-first che mostra in tempo reale quali terrazze di Barcellona sono al 
 
 ```bash
 npm run dev               # dev server su :5180 (strictPort)
-npm test                  # vitest run (60 test attualmente)
+npm test                  # vitest run (65 test attualmente)
 npm run test:coverage     # vitest + coverage v8 (HTML in coverage/)
 npm run test:e2e          # playwright smoke test (6 test, Chromium mobile)
 npm run build             # build prod in dist/
@@ -70,6 +71,10 @@ npm run pipeline:run      # rigenera tutti i dati (terraces + buildings + height
 - `requestIdleCallback` per `computeAllStates` (~6900 raycast): libera il main thread durante LCP/TTI.
 - Pulsanti emoji (📍, i, ×, 🗺️) hanno emoji wrap in `<span aria-hidden="true">` e `aria-label` con il vero testo dell'azione (Lighthouse label-content-name-mismatch).
 - Brand orange button text è `#1a1a1a` (non `white`): contrast ratio ~12:1 vs 2.55:1.
+- `SunTimeline.tsx` usa `useId()` per generare ID gradient unico per istanza — evita collisioni se ci fossero più timeline in pagina. Il gradient `<linearGradient>` usa `gradientUnits="userSpaceOnUse"` con `x2={VIEW_W}` così va da giallo→arancio lungo TUTTA la giornata (mattina gialla, sera arancio).
+- `computeSunTimeline` parte sempre da mezzanotte locale del `reference` (con `setHours(0,0,0,0)`), itera 24h a step 15min (96 sample). Per la card è ~96 raycast sun×building → ~1ms per terrazza. `useMemo` con dep `[t1, buildingIndex, now]` evita ricomputo a ogni render.
+- Pattern dark-mode CSS: per ogni override scuro servono DUE regole separate — `:root[data-theme='dark']` (toggle forzato) E `@media (prefers-color-scheme: dark) :root:not([data-theme='light'])` (auto-dark che rispetta override `light`). Non combinarle in una sola comma-separated selector list senza @media: la regola `:root:not([data-theme='light'])` matcha SEMPRE quando l'attributo non è impostato (anche in light mode prefers-color-scheme), e sovrascrive lo stile chiaro. Fix applicato in `card.css` per pill/confidence.
+- E2E test #2 e #3 (`slider orario aggiorna stati` e `ricerca filtra la lista`) sono flake tempo-dipendenti: usano regex `/[1-9]\d* terrazas al sol/` come proxy "dati caricati", ma dopo il tramonto il count è 0. Lo `slider.fill('360')` (=6h ahead) non li recupera perché 21:30 + 6h = 03:30, ancora notte. Sono pre-esistenti, non causati dal redesign card; il test che esercita la card (`deep-link ?id=`) passa.
 
 ## Decisioni architetturali
 

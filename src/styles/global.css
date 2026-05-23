@@ -1,0 +1,10 @@
+html, body, #root, .app-root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  background: #fafafa;
+}
+* { box-sizing: border-box; }

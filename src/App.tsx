@@ -66,11 +66,21 @@ export default function App() {
 
   const sunnyCount = Object.values(states).filter((s) => s === 'sun').length;
 
+  const outsideBcn =
+    geo.status === 'ok' &&
+    (geo.lng < 2.0 || geo.lng > 2.3 || geo.lat < 41.3 || geo.lat > 41.5);
+
   return (
     <div className="app-root">
       <MapView onMapReady={setMap} />
       {map && <Markers map={map} />}
       <TimeSlider />
+      {geo.status === 'denied' && (
+        <div className="edge-banner">{t('geoDenied')}</div>
+      )}
+      {outsideBcn && (
+        <div className="edge-banner">{t('outsideBcn')}</div>
+      )}
       <BottomSheet collapsedLabel={t('sunnyNearby', { count: sunnyCount })}>
         <TerraceList onSelectTerrace={setSelectedId} />
       </BottomSheet>

@@ -10,3 +10,11 @@ html, body, #root, .app-root {
   background: #fafafa;
 }
 * { box-sizing: border-box; }
+
+.edge-banner {
+  position: absolute; top: 72px; left: 16px; right: 16px;
+  background: #fffbe6; border: 1px solid #f5a623;
+  padding: 10px 12px; border-radius: 10px;
+  font-size: 13px; color: #6b3a00;
+  z-index: 7;
+}

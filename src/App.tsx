@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { Map as MLMap } from 'maplibre-gl';
 import MapView from './components/MapView.js';
 import Markers from './components/Markers.js';
+import TimeSlider from './components/TimeSlider.js';
 import { useGeolocation } from './lib/use-geolocation.js';
 import { useStore } from './store/use-store.js';
 import { loadTerraces, loadMeta, loadBuildingChunk, cellsForBbox } from './lib/data-loader.js';
@@ -58,6 +59,7 @@ export default function App() {
     <div className="app-root">
       <MapView onMapReady={setMap} />
       {map && <Markers map={map} />}
+      <TimeSlider />
     </div>
   );
 }

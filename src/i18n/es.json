@@ -1,0 +1,14 @@
+{
+  "appName": "Terrazas al sol",
+  "sunnyNearby": "{count} terrazas al sol cerca de ti",
+  "openInGoogleMaps": "Abrir en Google Maps",
+  "sunnyUntil": "Al sol hasta las {time}",
+  "tables": "{n} mesas",
+  "walkMinutes": "{n} min a pie",
+  "now": "Ahora",
+  "sunset": "Atardecer",
+  "geoDenied": "Permiso de ubicación denegado",
+  "outsideBcn": "Por ahora solo cubrimos Barcelona",
+  "night": "El sol ya se puso",
+  "credits": "Datos: Open Data BCN · OpenStreetMap · OpenFreeMap"
+}

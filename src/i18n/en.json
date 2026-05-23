@@ -1,0 +1,14 @@
+{
+  "appName": "Sunny terraces",
+  "sunnyNearby": "{count} sunny terraces near you",
+  "openInGoogleMaps": "Open in Google Maps",
+  "sunnyUntil": "Sunny until {time}",
+  "tables": "{n} tables",
+  "walkMinutes": "{n} min walk",
+  "now": "Now",
+  "sunset": "Sunset",
+  "geoDenied": "Location permission denied",
+  "outsideBcn": "We only cover Barcelona for now",
+  "night": "The sun has set",
+  "credits": "Data: Open Data BCN · OpenStreetMap · OpenFreeMap"
+}

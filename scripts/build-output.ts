@@ -46,7 +46,12 @@ async function main(): Promise<void> {
   // alle terrazze ancora con name === address, quindi non sovrascrive mai un nome OSM.
   if (await exists(POIS_IN)) {
     const pRaw = JSON.parse(await readFile(POIS_IN, 'utf-8')) as { pois: RawPoi[] };
+    const before = new Set(terraces.filter((t) => t.name !== t.address).map((t) => t.id));
     terraces = matchTerracesToPois(terraces, pRaw.pois, POI_MATCH_RADIUS_M);
+    // Marca origine OSM per le terrazze appena nominate (non quelle che avevano già name).
+    terraces = terraces.map((t) =>
+      t.name !== t.address && !before.has(t.id) ? { ...t, nameSource: 'osm' as const } : t,
+    );
     const after = terraces.filter((t) => t.name !== t.address).length;
     console.log(
       `Arricchimento OSM: ${after}/${terraces.length} terrazze (${((after / terraces.length) * 100).toFixed(1)}%) con nome.`,
@@ -64,10 +69,11 @@ async function main(): Promise<void> {
       const g = byId.get(t.id);
       if (!g) return t;
       added++;
-      return { ...t, name: g.name, placeId: g.placeId };
+      return { ...t, name: g.name, placeId: g.placeId, nameSource: 'google' as const };
     });
     // Per le terrazze già nominate da OSM, allega comunque il placeId se esiste
-    // (così il link Google Maps apre la scheda esatta anche per quelle).
+    // (così il link Google Maps apre la scheda esatta anche per quelle). Lascia
+    // nameSource='osm': il nome resta OSM, il placeId è solo per il link.
     terraces = terraces.map((t) => (t.placeId ? t : (byId.get(t.id)?.placeId ? { ...t, placeId: byId.get(t.id)!.placeId } : t)));
     const totalNamed = terraces.filter((t) => t.name !== t.address).length;
     const totalWithPlaceId = terraces.filter((t) => t.placeId).length;
@@ -87,9 +93,9 @@ async function main(): Promise<void> {
   await mkdir(BUILDINGS_DIR, { recursive: true });
 
   // Scrive terraces.json: include chairs e surfaceSqM (mostrati nella TerraceCard).
-  // placeId è opzionale: omesso se assente per non sprecare bytes nel JSON.
+  // placeId e nameSource sono opzionali: omessi se assenti per non sprecare bytes.
   const runtime = terraces.map((tr) => {
-    const base = {
+    const base: Record<string, unknown> = {
       id: tr.id,
       name: tr.name,
       address: tr.address,
@@ -100,7 +106,9 @@ async function main(): Promise<void> {
       surfaceSqM: tr.surfaceSqM ?? 0,
       neighborhood: tr.neighborhood,
     };
-    return tr.placeId ? { ...base, placeId: tr.placeId } : base;
+    if (tr.placeId) base.placeId = tr.placeId;
+    if (tr.nameSource) base.nameSource = tr.nameSource;
+    return base;
   });
   await writeFile(`${OUT_DIR}/terraces.json`, JSON.stringify(runtime));
 

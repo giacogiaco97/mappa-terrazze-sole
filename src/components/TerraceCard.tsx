@@ -119,6 +119,15 @@ export default function TerraceCard() {
           <span>{statusLabel}</span>
         </span>
         <h2 id="card-title" className="card__title">{t1.name || t1.address}</h2>
+        {t1.nameSource === 'google' && (
+          <span
+            className="card__name-source"
+            title={t('nameFromGoogle')}
+            aria-label={t('nameFromGoogle')}
+          >
+            <span aria-hidden="true">ⓘ</span> {t('nameFromGoogleShort')}
+          </span>
+        )}
         {subtitle && <p className="card__subtitle">{subtitle}</p>}
         {weatherHour && wKind !== 'unknown' && (
           <p className="card__weather" title={t('weatherForecast')}>

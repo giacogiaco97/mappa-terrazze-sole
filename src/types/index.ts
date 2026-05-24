@@ -12,6 +12,13 @@ export type Terrace = {
   surfaceSqM?: number;
   /** Google Maps place_id. Se presente, il link "Google Maps" apre la scheda esatta. */
   placeId?: string;
+  /**
+   * Provenienza del nome commerciale:
+   * - `osm`: matched da OpenStreetMap (alta confidenza, locale verificato dalla community)
+   * - `google`: matched da Google Places Nearby (primo locale entro 30m, possibile mismatch se più locali vicini)
+   * - undefined: nessun match, `name` coincide con `address` (dataset BCN)
+   */
+  nameSource?: 'osm' | 'google';
 };
 
 export type Building = {

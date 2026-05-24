@@ -73,5 +73,7 @@
   "rainSoon": "Rain likely at {time} ({prob}%)",
   "sparklineSun": "{n}% sun",
   "tomorrowGreatSun": "Tomorrow: {h}h of sun forecast — get ready!",
-  "tomorrowBannerClose": "Close notice"
+  "tomorrowBannerClose": "Close notice",
+  "nameFromGoogle": "Name found nearby (Google Maps) — please verify on site",
+  "nameFromGoogleShort": "Name via Google"
 }

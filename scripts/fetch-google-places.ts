@@ -12,9 +12,22 @@
 //
 // API key: variabile d'ambiente GOOGLE_PLACES_API_KEY (o .env.local).
 import { readFile, writeFile, mkdir, access } from 'node:fs/promises';
+import { readFileSync, existsSync } from 'node:fs';
 import { matchTerracesToPois } from './lib/match-pois.js';
 import type { RawPoi } from './fetch-osm-pois.js';
 import type { Terrace } from '../src/types/index.js';
+
+// Carica .env.local se presente (formato minimal KEY=value, una per riga).
+// Evita di dover esportare manualmente la variabile in shell ogni volta.
+function loadEnvLocal(): void {
+  const path = '.env.local';
+  if (!existsSync(path)) return;
+  for (const line of readFileSync(path, 'utf-8').split(/\r?\n/)) {
+    const m = line.match(/^([A-Z_][A-Z0-9_]*)=(.*)$/);
+    if (m && !process.env[m[1]!]) process.env[m[1]!] = m[2]!.trim();
+  }
+}
+loadEnvLocal();
 
 const ENDPOINT = 'https://places.googleapis.com/v1/places:searchNearby';
 const RADIUS_M = 30;

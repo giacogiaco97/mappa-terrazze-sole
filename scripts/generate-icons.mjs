@@ -1,101 +1,51 @@
-// Genera icone PWA brandate (sole bianco su sfondo arancio).
-// Senza dipendenze: builtin zlib + scrittura manuale di un PNG RGB.
-import { writeFileSync, mkdirSync } from 'node:fs';
-import { deflateSync } from 'node:zlib';
+// Genera tutte le icone PWA + favicon a partire da public/icons/source.png (1024×1024).
+// - icon-192.png, icon-512.png: PNG diretti dalla sorgente per Android e PWA
+// - icon-512-maskable.png: padding 10% + sfondo bianco (safe zone maskable 80%)
+// - apple-touch-icon.png (180×180): iOS home screen (Apple arrotonda da sé)
+// - favicon-32.png, favicon-16.png: favicon raster di backup
+// - favicon.ico: 16/32/48 multi-size (Edge, Firefox legacy, bookmarks)
+import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import sharp from 'sharp';
+import pngToIco from 'png-to-ico';
 
-const T = new Uint32Array(256);
-for (let n = 0; n < 256; n++) {
-  let c = n;
-  for (let k = 0; k < 8; k++) c = (c & 1) ? (0xedb88320 ^ (c >>> 1)) : (c >>> 1);
-  T[n] = c >>> 0;
-}
-const crc32 = (b) => {
-  let c = 0xffffffff;
-  for (const x of b) c = T[(c ^ x) & 0xff] ^ (c >>> 8);
-  return (c ^ 0xffffffff) >>> 0;
-};
-const chunk = (type, data) => {
-  const len = Buffer.alloc(4);
-  len.writeUInt32BE(data.length);
-  const t = Buffer.from(type, 'ascii');
-  const crc = Buffer.alloc(4);
-  crc.writeUInt32BE(crc32(Buffer.concat([t, data])));
-  return Buffer.concat([len, t, data, crc]);
-};
+const SOURCE = 'public/icons/source.png';
+const OUT_DIR = 'public/icons';
+mkdirSync(OUT_DIR, { recursive: true });
 
-// Disegna sole stilizzato: cerchio bianco al centro + 8 raggi rettangolari.
-// `safeRatio` = quanto del lato l'icona occupa (1.0 = pieno, 0.7 = maskable safe zone).
-function sunPng(size, bgRgb, fgRgb, safeRatio = 1.0) {
-  const sig = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
-  const ihdr = Buffer.alloc(13);
-  ihdr.writeUInt32BE(size, 0);
-  ihdr.writeUInt32BE(size, 4);
-  ihdr[8] = 8;   // bit depth
-  ihdr[9] = 2;   // color type RGB
-  ihdr[10] = 0; ihdr[11] = 0; ihdr[12] = 0;
-
-  const raw = Buffer.alloc(size * (1 + size * 3));
-  const cx = size / 2;
-  const cy = size / 2;
-  const drawArea = size * safeRatio;
-  const coreR = drawArea * 0.22;
-  const rayInner = drawArea * 0.30;
-  const rayOuter = drawArea * 0.45;
-  const rayHalfWidth = drawArea * 0.045;
-
-  for (let y = 0; y < size; y++) {
-    const off = y * (1 + size * 3);
-    raw[off] = 0; // filter byte = None
-    for (let x = 0; x < size; x++) {
-      const p = off + 1 + x * 3;
-      // default: sfondo
-      let r = bgRgb[0], g = bgRgb[1], b = bgRgb[2];
-
-      const dx = x - cx, dy = y - cy;
-      const dist = Math.hypot(dx, dy);
-
-      // disco centrale
-      if (dist <= coreR) {
-        r = fgRgb[0]; g = fgRgb[1]; b = fgRgb[2];
-      } else if (dist >= rayInner && dist <= rayOuter) {
-        // raggi: ogni 45°
-        const ang = Math.atan2(dy, dx); // [-π, π]
-        for (let k = 0; k < 8; k++) {
-          const rayAng = -Math.PI + (k * Math.PI) / 4;
-          // distanza perpendicolare dal centro del raggio
-          let dAng = ang - rayAng;
-          // normalizza tra -π e π
-          while (dAng > Math.PI) dAng -= 2 * Math.PI;
-          while (dAng < -Math.PI) dAng += 2 * Math.PI;
-          // larghezza in pixel sull'arco
-          const perp = Math.abs(Math.sin(dAng)) * dist;
-          if (perp <= rayHalfWidth) {
-            r = fgRgb[0]; g = fgRgb[1]; b = fgRgb[2];
-            break;
-          }
-        }
-      }
-
-      raw[p] = r;
-      raw[p + 1] = g;
-      raw[p + 2] = b;
-    }
-  }
-
-  return Buffer.concat([
-    sig,
-    chunk('IHDR', ihdr),
-    chunk('IDAT', deflateSync(raw)),
-    chunk('IEND', Buffer.alloc(0)),
-  ]);
+async function plain(size, outName) {
+  await sharp(SOURCE).resize(size, size, { fit: 'cover' }).png().toFile(`${OUT_DIR}/${outName}`);
 }
 
-const BG = [0xf5, 0xa6, 0x23]; // arancio brand
-const FG = [0xff, 0xff, 0xff]; // bianco
+async function maskable(size, outName) {
+  // Safe zone maskable: diametro 80% del lato. Padding 10% per lato + sfondo bianco
+  // (la cornice esterna dell'illustrazione è già bianca → continuità visiva).
+  const inner = Math.round(size * 0.80);
+  const pad = Math.round((size - inner) / 2);
+  const resized = await sharp(SOURCE).resize(inner, inner, { fit: 'cover' }).png().toBuffer();
+  await sharp({
+    create: { width: size, height: size, channels: 4, background: { r: 255, g: 255, b: 255, alpha: 1 } },
+  })
+    .composite([{ input: resized, top: pad, left: pad }])
+    .png()
+    .toFile(`${OUT_DIR}/${outName}`);
+}
 
-mkdirSync('public/icons', { recursive: true });
-writeFileSync('public/icons/icon-192.png', sunPng(192, BG, FG, 1.0));
-writeFileSync('public/icons/icon-512.png', sunPng(512, BG, FG, 1.0));
-// Maskable: safe zone al 70% (richiesto dalle linee guida per maschere arrotondate).
-writeFileSync('public/icons/icon-512-maskable.png', sunPng(512, BG, FG, 0.70));
-console.log('Icone generate: icon-192.png, icon-512.png, icon-512-maskable.png');
+await plain(192, 'icon-192.png');
+await plain(512, 'icon-512.png');
+await maskable(512, 'icon-512-maskable.png');
+await plain(180, 'apple-touch-icon.png');
+await plain(32, 'favicon-32.png');
+await plain(16, 'favicon-16.png');
+
+// favicon.ico multi-size — genera buffer 16/32/48 e li impacchetta
+const icoSizes = [16, 32, 48];
+const icoBuffers = await Promise.all(
+  icoSizes.map((s) => sharp(SOURCE).resize(s, s, { fit: 'cover' }).png().toBuffer()),
+);
+const icoBuf = await pngToIco(icoBuffers);
+writeFileSync('public/favicon.ico', icoBuf);
+
+console.log('Icone generate:');
+console.log('  PWA       : icon-192.png, icon-512.png, icon-512-maskable.png');
+console.log('  iOS       : apple-touch-icon.png (180×180)');
+console.log('  Favicon   : favicon.ico (16/32/48), favicon-32.png, favicon-16.png');

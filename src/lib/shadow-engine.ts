@@ -37,11 +37,12 @@ export function isInSun(
     // Proietta footprint in metri locali.
     const ring = b.footprint.map(([blng, blat]) => proj.project(blat, blng));
 
-    // Se la terrazza è dentro il footprint dell'edificio stesso, considerala ombra
-    // (terrazza addossata al muro interno — caso raro ma reale).
-    if (pointInPolygon(0, 0, ring)) {
-      if (b.height >= 1) return false;
-    }
+    // Se la terrazza cade dentro questo footprint, è il palazzo del locale stesso:
+    // nel dataset Open Data Barcelona le coordinate sono l'ingresso del locale, che
+    // sta dentro il muro. La terrazza fisica è sul marciapiede esterno, quindi questo
+    // edificio non la blocca dall'interno. Lo escludiamo dal raycast; gli altri palazzi
+    // (di fronte, ai lati) restano e possono bloccare normalmente.
+    if (pointInPolygon(0, 0, ring)) continue;
 
     let minHit = Infinity;
     for (let i = 0; i < ring.length - 1; i++) {

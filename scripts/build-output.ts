@@ -10,7 +10,10 @@ const POIS_IN = 'data-raw/osm-pois.raw.json';
 const OUT_DIR = 'public/data';
 const BUILDINGS_DIR = `${OUT_DIR}/buildings`;
 const GRID_STEP = 0.01; // ~1 km
-const POI_MATCH_RADIUS_M = 50;
+// Raggio match POI: con 50m perdiamo locali con ingresso "profondo" (interno cortile)
+// o terrazze autorizzate su via diversa dalla facciata. 70m copre ~10% terrazze in più
+// senza mismatch eccessivi grazie al vincolo greedy (1 POI = 1 terrazza più vicina).
+const POI_MATCH_RADIUS_M = 70;
 
 const BCN_BBOX: [number, number, number, number] = [2.07, 41.32, 2.23, 41.47];
 const CITY = 'Barcelona';

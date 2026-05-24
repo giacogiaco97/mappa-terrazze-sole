@@ -52,3 +52,46 @@ describe('isInSun — sole basso a sud', () => {
     expect(isInSun(tLat, tLng, sun, index)).toBe(false);
   });
 });
+
+// Bug reale: nel dataset Open Data Barcelona le coordinate della terrazza
+// corrispondono all'ingresso del locale, che cade DENTRO il footprint del
+// palazzo del locale stesso. Il vecchio comportamento "pointInPolygon → ombra
+// permanente" trasformava ogni terrazza addossata al suo palazzo in
+// "todo el día a la sombra". In realtà la terrazza fisica sta sul marciapiede
+// esterno ed è esposta al sole quando nessun altro edificio la blocca.
+describe('isInSun — punto dentro footprint del proprio palazzo', () => {
+  // Palazzo del locale: blocco 30 m × 30 m centrato sulla terrazza, h=30 m.
+  const selfHalf = 15 / 111_320;
+  const selfHalfLng = 15 / (111_320 * Math.cos((tLat * Math.PI) / 180));
+  const selfBuilding: Building = {
+    id: 'self',
+    height: 30,
+    heightSource: 'levels',
+    footprint: [
+      [tLng - selfHalfLng, tLat - selfHalf],
+      [tLng + selfHalfLng, tLat - selfHalf],
+      [tLng + selfHalfLng, tLat + selfHalf],
+      [tLng - selfHalfLng, tLat + selfHalf],
+      [tLng - selfHalfLng, tLat - selfHalf],
+    ],
+  };
+
+  test('terrazza dentro il footprint del palazzo del locale, nessun altro edificio → al sole', () => {
+    const index = buildBuildingIndex([selfBuilding]);
+    const sun = { altitude: 1.0, azimuth: 0 }; // sole alto a sud
+    expect(isInSun(tLat, tLng, sun, index)).toBe(true);
+  });
+
+  test('terrazza dentro il proprio palazzo MA palazzo dirimpetto più alto a sud → ombra (non-regressione)', () => {
+    const index = buildBuildingIndex([selfBuilding, south]);
+    // sole basso a sud (30°), edificio south h=30m blocca davvero
+    const sun = { altitude: 0.524, azimuth: 0 };
+    expect(isInSun(tLat, tLng, sun, index)).toBe(false);
+  });
+
+  test('terrazza dentro il proprio palazzo, sole a nord → al sole', () => {
+    const index = buildBuildingIndex([selfBuilding]);
+    const sun = { altitude: 0.524, azimuth: Math.PI }; // sole basso da nord
+    expect(isInSun(tLat, tLng, sun, index)).toBe(true);
+  });
+});

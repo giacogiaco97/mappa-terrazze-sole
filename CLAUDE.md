@@ -4,9 +4,11 @@ PWA mobile-first che mostra in tempo reale quali terrazze di Barcellona sono al 
 
 - **Lancio:** Barcellona (estendibile multi-città in Fase 4)
 - **Stack:** Vite 8 + React 19 + TypeScript + MapLibre 5 + suncalc + RBush + Zustand + vite-plugin-pwa
-- **Hosting:** GitHub Pages (statico, gratuito)
-- **URL live:** https://giacogiaco97.github.io/mappa-terrazze-sole/
+- **Hosting:** Vercel (primario) + GitHub Pages (fallback)
+- **URL live:** https://mappa-terrazze-sole.vercel.app
+- **URL fallback:** https://giacogiaco97.github.io/mappa-terrazze-sole/
 - **Repo:** https://github.com/giacogiaco97/mappa-terrazze-sole
+- **Vercel project:** `giacomos-projects-75b856d8/mappa-terrazze-sole` (auto-deploy collegato a `main`)
 - **Group ID graphiti:** `mappa-delle-terrazze-al-sole`
 
 ## Storia

@@ -15,8 +15,9 @@
     "pipeline:buildings": "tsx scripts/fetch-buildings.ts",
     "pipeline:heights": "tsx scripts/resolve-heights.ts",
     "pipeline:pois": "tsx scripts/fetch-osm-pois.ts",
+    "pipeline:google": "tsx scripts/fetch-google-places.ts",
     "pipeline:build": "tsx scripts/build-output.ts",
-    "pipeline:run": "npm run pipeline:terraces && npm run pipeline:buildings && npm run pipeline:heights && npm run pipeline:pois && npm run pipeline:build"
+    "pipeline:run": "npm run pipeline:terraces && npm run pipeline:buildings && npm run pipeline:heights && npm run pipeline:pois && npm run pipeline:google && npm run pipeline:build"
   },
   "devDependencies": {
     "@playwright/test": "^1.60.0",

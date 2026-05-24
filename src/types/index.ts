@@ -10,6 +10,8 @@ export type Terrace = {
   chairs?: number;
   /** Superficie occupata in m². 0 se assente nel dataset sorgente. */
   surfaceSqM?: number;
+  /** Google Maps place_id. Se presente, il link "Google Maps" apre la scheda esatta. */
+  placeId?: string;
 };
 
 export type Building = {

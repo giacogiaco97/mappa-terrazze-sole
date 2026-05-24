@@ -1,4 +1,10 @@
-export function googleMapsUrl(input: { name: string; address: string }): string {
+export function googleMapsUrl(input: { name: string; address: string; placeId?: string }): string {
+  // Se conosciamo il place_id (arricchimento Google Places), apriamo la scheda
+  // esatta del locale (con foto, recensioni, orari). Altrimenti fallback a ricerca testuale.
+  if (input.placeId) {
+    const q = encodeURIComponent(input.name || input.address);
+    return `https://www.google.com/maps/search/?api=1&query=${q}&query_place_id=${input.placeId}`;
+  }
   const parts = [input.name, input.address, 'Barcelona'].filter(Boolean);
   const q = encodeURIComponent(parts.join(', '));
   return `https://www.google.com/maps/search/?api=1&query=${q}`;

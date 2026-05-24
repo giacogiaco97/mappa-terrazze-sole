@@ -2,11 +2,13 @@ import { readFile, writeFile, mkdir, rm, access } from 'node:fs/promises';
 import { chunkByGrid } from './lib/chunk-by-grid.js';
 import { matchTerracesToPois } from './lib/match-pois.js';
 import type { RawPoi } from './fetch-osm-pois.js';
+import type { GooglePlaceMatch } from './fetch-google-places.js';
 import type { Building, Meta, Terrace } from '../src/types/index.js';
 
 const TERRACES_IN = 'data-raw/terraces.raw.json';
 const BUILDINGS_IN = 'data-raw/buildings.resolved.json';
 const POIS_IN = 'data-raw/osm-pois.raw.json';
+const GOOGLE_IN = 'data-raw/google-places.raw.json';
 const OUT_DIR = 'public/data';
 const BUILDINGS_DIR = `${OUT_DIR}/buildings`;
 const GRID_STEP = 0.01; // ~1 km
@@ -39,18 +41,41 @@ async function main(): Promise<void> {
     lng: Math.round(t.lng * 1e5) / 1e5,
   }));
 
-  // Arricchimento: nome commerciale dal POI OSM più vicino.
-  // Il dataset BCN non contiene il nome del locale: arricchiamo con OSM (Fase 3 anticipata).
+  // Arricchimento nome: prima OSM (gratuito, copre ~72%), poi Google Places per i buchi.
+  // OSM ha vincolo greedy "1 POI = 1 terrazza più vicina"; Google viene applicato SOLO
+  // alle terrazze ancora con name === address, quindi non sovrascrive mai un nome OSM.
   if (await exists(POIS_IN)) {
     const pRaw = JSON.parse(await readFile(POIS_IN, 'utf-8')) as { pois: RawPoi[] };
-    const before = terraces.filter((t) => t.name !== t.address).length;
     terraces = matchTerracesToPois(terraces, pRaw.pois, POI_MATCH_RADIUS_M);
     const after = terraces.filter((t) => t.name !== t.address).length;
     console.log(
-      `Arricchimento POI: ${after - before} terrazze su ${terraces.length} (${((after / terraces.length) * 100).toFixed(1)}%) con nome OSM.`,
+      `Arricchimento OSM: ${after}/${terraces.length} terrazze (${((after / terraces.length) * 100).toFixed(1)}%) con nome.`,
     );
   } else {
     console.warn(`!! ${POIS_IN} mancante: salto l'arricchimento OSM.`);
+  }
+
+  if (await exists(GOOGLE_IN)) {
+    const gRaw = JSON.parse(await readFile(GOOGLE_IN, 'utf-8')) as { matches: GooglePlaceMatch[] };
+    const byId = new Map(gRaw.matches.map((m) => [m.terraceId, m] as const));
+    let added = 0;
+    terraces = terraces.map((t) => {
+      if (t.name !== t.address) return t; // già nominata da OSM
+      const g = byId.get(t.id);
+      if (!g) return t;
+      added++;
+      return { ...t, name: g.name, placeId: g.placeId };
+    });
+    // Per le terrazze già nominate da OSM, allega comunque il placeId se esiste
+    // (così il link Google Maps apre la scheda esatta anche per quelle).
+    terraces = terraces.map((t) => (t.placeId ? t : (byId.get(t.id)?.placeId ? { ...t, placeId: byId.get(t.id)!.placeId } : t)));
+    const totalNamed = terraces.filter((t) => t.name !== t.address).length;
+    const totalWithPlaceId = terraces.filter((t) => t.placeId).length;
+    console.log(
+      `Arricchimento Google Places: +${added} nomi nuovi → ${totalNamed}/${terraces.length} totali (${((totalNamed / terraces.length) * 100).toFixed(1)}%). place_id su ${totalWithPlaceId} terrazze.`,
+    );
+  } else {
+    console.warn(`!! ${GOOGLE_IN} mancante: salto l'arricchimento Google Places (esegui prima 'npx tsx scripts/fetch-google-places.ts').`);
   }
 
   // Edifici
@@ -62,17 +87,21 @@ async function main(): Promise<void> {
   await mkdir(BUILDINGS_DIR, { recursive: true });
 
   // Scrive terraces.json: include chairs e surfaceSqM (mostrati nella TerraceCard).
-  const runtime = terraces.map((tr) => ({
-    id: tr.id,
-    name: tr.name,
-    address: tr.address,
-    lat: tr.lat,
-    lng: tr.lng,
-    tables: tr.tables,
-    chairs: tr.chairs ?? 0,
-    surfaceSqM: tr.surfaceSqM ?? 0,
-    neighborhood: tr.neighborhood,
-  }));
+  // placeId è opzionale: omesso se assente per non sprecare bytes nel JSON.
+  const runtime = terraces.map((tr) => {
+    const base = {
+      id: tr.id,
+      name: tr.name,
+      address: tr.address,
+      lat: tr.lat,
+      lng: tr.lng,
+      tables: tr.tables,
+      chairs: tr.chairs ?? 0,
+      surfaceSqM: tr.surfaceSqM ?? 0,
+      neighborhood: tr.neighborhood,
+    };
+    return tr.placeId ? { ...base, placeId: tr.placeId } : base;
+  });
   await writeFile(`${OUT_DIR}/terraces.json`, JSON.stringify(runtime));
 
   // Suddivide edifici in griglia

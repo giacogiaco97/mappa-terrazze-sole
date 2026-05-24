@@ -14,6 +14,23 @@ describe('googleMapsUrl', () => {
     const url = googleMapsUrl({ name: '', address: 'Plaça X' });
     expect(url).toContain(encodeURIComponent('Plaça X'));
   });
+
+  test('con placeId genera link pixel-perfect alla scheda Google', () => {
+    const url = googleMapsUrl({
+      name: 'Café Turó',
+      address: 'C. TENOR VIÑAS, 1',
+      placeId: 'ChIJ1234567890abcdef',
+    });
+    expect(url).toContain('query_place_id=ChIJ1234567890abcdef');
+    expect(url).toContain(encodeURIComponent('Café Turó'));
+    // Senza Barcellona/indirizzo quando ho placeId (Google ha già tutto dal place_id)
+    expect(url).not.toContain(encodeURIComponent('Barcelona'));
+  });
+
+  test('senza placeId NON include query_place_id', () => {
+    const url = googleMapsUrl({ name: 'Bar', address: 'Via X' });
+    expect(url).not.toContain('query_place_id');
+  });
 });
 
 describe('streetViewUrl', () => {

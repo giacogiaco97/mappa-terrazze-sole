@@ -30,7 +30,7 @@ export default function TerraceListRow({ terrace, status, distanceMeters, onSele
       </button>
       <a
         className="row__maps"
-        href={googleMapsUrl({ name: terrace.name, address: terrace.address })}
+        href={googleMapsUrl({ name: terrace.name, address: terrace.address, placeId: terrace.placeId })}
         target="_blank" rel="noreferrer"
         aria-label={t('openInGoogleMaps')}
       >🗺️</a>

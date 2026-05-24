@@ -215,7 +215,7 @@ export default function TerraceCard() {
       <div className="card__actions">
         <a
           className="card__btn card__btn--primary"
-          href={googleMapsUrl({ name: t1.name, address: t1.address })}
+          href={googleMapsUrl({ name: t1.name, address: t1.address, placeId: t1.placeId })}
           target="_blank" rel="noreferrer"
         >
           <span aria-hidden="true">🗺️</span>{' '}

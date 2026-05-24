@@ -6,10 +6,13 @@ import { t } from '../i18n/i18n.js';
 import '../styles/time-slider.css';
 
 const BCN = { lat: 41.39, lng: 2.165 };
-const MIN_OFFSET = -180;        // 3h fa
-const MAX_OFFSET = 7 * 24 * 60; // 7 giorni avanti
+// Slider relativo al GIORNO SELEZIONATO: range 0..1425 minuti dalla mezzanotte
+// (24h - 1 step), per evitare che muovendo lo slider si finisca per sbaglio
+// nel giorno successivo. Per cambiare giorno si usa il day picker sopra.
+const MIN_OFFSET = 0;
 const STEP_MIN = 15;
-const DAYS_VISIBLE = 8;          // oggi + 7 giorni
+const MAX_OFFSET = 24 * 60 - STEP_MIN; // 1425 = 23:45
+const DAYS_VISIBLE = 8;                // oggi + 7 giorni
 
 function formatHM(d: Date): string {
   return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -50,14 +53,13 @@ export default function TimeSlider() {
     return () => window.clearInterval(id);
   }, []);
 
-  const times = useMemo(() => getTimes(realNow, BCN.lat, BCN.lng), [realNow]);
+  // Sunrise/sunset sono SEMPRE relativi al giorno selezionato (`now`), così
+  // l'etichetta destra mostra il tramonto/alba del giorno che sto visualizzando.
+  const times = useMemo(() => getTimes(now, BCN.lat, BCN.lng), [now]);
   const sunset = times.sunset;
   const sunrise = times.sunrise;
-  const tomorrow = useMemo(() => new Date(realNow.getTime() + 24 * 3600_000), [realNow]);
-  const sunriseTomorrow = useMemo(() => getTimes(tomorrow, BCN.lat, BCN.lng).sunrise, [tomorrow]);
   const sunAltitudeRad = useMemo(() => getSunPosition(now, BCN.lat, BCN.lng).altitude, [now]);
   const isNight = sunAltitudeRad <= 0;
-  const nextSunrise = now.getTime() < sunrise.getTime() ? sunrise : sunriseTomorrow;
 
   // Lista dei giorni visibili nel day picker (oggi + 7 successivi)
   const dayOptions = useMemo(() => {
@@ -72,16 +74,20 @@ export default function TimeSlider() {
   // Lingua sistema per i nomi giorni nel day picker
   const locale = typeof navigator !== 'undefined' ? navigator.language : undefined;
 
+  // Sincronizza la posizione dello slider con l'ora del `now` (minuti dalla mezzanotte
+  // del giorno selezionato). Quando l'utente cambia giorno dal picker o premiamo reset,
+  // questo riallinea la posizione del cursore.
   useEffect(() => {
-    const delta = Math.round((now.getTime() - realNow.getTime()) / 60_000);
-    const clamped = Math.max(MIN_OFFSET, Math.min(MAX_OFFSET, delta));
-    setValueMin(clamped);
-  }, [now, realNow]);
+    setValueMin(now.getHours() * 60 + now.getMinutes());
+  }, [now]);
 
   const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const m = Number(e.target.value);
     setValueMin(m);
-    setNow(new Date(realNow.getTime() + m * 60_000));
+    // Cambia SOLO l'ora del giorno selezionato, mantenendo intatta la data.
+    const target = startOfDay(now);
+    target.setMinutes(m);
+    setNow(target);
   };
 
   const reset = () => {
@@ -105,9 +111,10 @@ export default function TimeSlider() {
     dayDiff === 1 ? `${t('tomorrow')} ${formatHM(now)}` :
     `${now.toLocaleDateString(locale, { weekday: 'short', day: 'numeric' })} ${formatHM(now)}`;
 
-  // Etichetta destra: tramonto (oggi se il `now` non è notte) o alba (se notte)
+  // Etichetta destra: tramonto del giorno selezionato (di default), o alba di
+  // quel giorno se il `now` è in fascia notturna. Tutto resta dentro il giorno.
   const rightLabel = isNight
-    ? `${t('sunrise')} ${formatHM(nextSunrise)}`
+    ? `${t('sunrise')} ${formatHM(sunrise)}`
     : `${t('sunset')} ${formatHM(sunset)}`;
 
   return (

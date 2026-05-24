@@ -1,6 +1,7 @@
 import { useMemo, useRef, useEffect, useState } from 'react';
 import { useStore } from '../store/use-store.js';
 import { sortTerracesByDistance } from '../lib/sort-terraces.js';
+import { requestGeolocationOnce } from '../lib/use-geolocation.js';
 import { t } from '../i18n/i18n.js';
 import TerraceListRow from './TerraceListRow.js';
 
@@ -62,7 +63,19 @@ export default function TerraceList({ onSelectTerrace }: Props) {
 
   const visible = filtered.slice(0, page * PAGE_SIZE);
 
-  if (!userPos) return <p className="list__empty">{t('listNeedsLocation')}</p>;
+  if (!userPos) {
+    return (
+      <button
+        type="button"
+        className="list__activate-geo"
+        onClick={() => requestGeolocationOnce()}
+        aria-label={t('listNeedsLocation')}
+      >
+        <span aria-hidden="true" className="list__activate-geo-icon">📍</span>
+        <span>{t('listNeedsLocation')}</span>
+      </button>
+    );
+  }
 
   return (
     <div className="list-wrap">

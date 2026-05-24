@@ -1,5 +1,5 @@
 import { useStore } from '../store/use-store.js';
-import { useGeolocation } from '../lib/use-geolocation.js';
+import { useGeolocation, requestGeolocationOnce } from '../lib/use-geolocation.js';
 import type { Map as MLMap } from 'maplibre-gl';
 import { t } from '../i18n/i18n.js';
 import '../styles/geolocate.css';
@@ -17,14 +17,12 @@ export default function GeolocateButton({ map }: Props) {
     if (!map || denied) return;
     if (userPos) {
       map.flyTo({ center: [userPos.lng, userPos.lat], zoom: 15, duration: 400 });
-    } else if ('geolocation' in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (p) => {
-          useStore.getState().setUserPos({ lat: p.coords.latitude, lng: p.coords.longitude });
-          map.flyTo({ center: [p.coords.longitude, p.coords.latitude], zoom: 15, duration: 400 });
-        },
-        () => undefined,
-      );
+    } else {
+      // Stessa utility usata da TerraceList: salva il flag granted in localStorage
+      // così alle visite successive partiamo proattivi senza ri-chiedere.
+      requestGeolocationOnce((coords) => {
+        map.flyTo({ center: [coords.lng, coords.lat], zoom: 15, duration: 400 });
+      });
     }
   };
   return (

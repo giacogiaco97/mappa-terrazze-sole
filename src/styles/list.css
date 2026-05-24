@@ -30,6 +30,35 @@
 .list__empty { padding: 20px 4px; color: var(--text-muted, #777); font-size: 14px; text-align: center; }
 .list__sentinel { height: 1px; }
 
+/* Banner cliccabile mostrato finché non c'è la posizione utente. Tinta brand
+   per segnalare che è un'azione, non solo testo informativo. */
+.list__activate-geo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  margin: 12px 0;
+  padding: 16px 18px;
+  border: 1px solid var(--brand, #f5a623);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--brand, #f5a623) 12%, transparent);
+  color: var(--text, #1a1a1a);
+  font: inherit;
+  font-weight: 600;
+  font-size: 15px;
+  text-align: center;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.05s ease;
+}
+.list__activate-geo:hover { background: color-mix(in srgb, var(--brand, #f5a623) 22%, transparent); }
+.list__activate-geo:active { transform: scale(0.98); }
+.list__activate-geo:focus-visible {
+  outline: 2px solid var(--brand, #f5a623);
+  outline-offset: 2px;
+}
+.list__activate-geo-icon { font-size: 22px; }
+
 .row { display: flex; align-items: stretch; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--border, #f0f0f0); }
 .row__main { flex: 1; display: flex; gap: 12px; align-items: center; background: transparent; border: 0; padding: 6px 4px; text-align: left; cursor: pointer; color: inherit; }
 .row__status { font-size: 22px; width: 32px; text-align: center; flex-shrink: 0; }

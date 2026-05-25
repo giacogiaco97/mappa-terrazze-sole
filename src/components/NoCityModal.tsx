@@ -47,22 +47,36 @@ export default function NoCityModal({ open, userLat, userLng, onClose }: Props) 
     onClose();
   };
 
+  // Email destinatario codificata in base64 → non leggibile a occhio nel bundle
+  // e non scrapeabile dai bot più semplici. FormSubmit la decodifica server-side.
+  // bWFzY2hlcmluMjc5N2dAZ21haWwuY29t = mascherin2797g@gmail.com
+  const FORMSUBMIT_ENDPOINT = 'https://formsubmit.co/ajax/bWFzY2hlcmluMjc5N2dAZ21haWwuY29t';
+
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!city.trim()) return;
+    // Bot honeypot: se compilato, finge successo senza inviare
+    if (honeypot) {
+      setSubmitState('success');
+      return;
+    }
     setSubmitState('submitting');
     setErrorMsg('');
     try {
-      const res = await fetch('/api/request-city', {
+      const res = await fetch(FORMSUBMIT_ENDPOINT, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify({
-          city: city.trim(),
-          email: email.trim() || undefined,
-          message: message.trim() || undefined,
-          lat: userLat ?? null,
-          lng: userLng ?? null,
-          honeypot,
+          _subject: `[Terrazas al sol] Pedido nueva ciudad: ${city.trim()}`,
+          _captcha: 'false',
+          _template: 'table',
+          ciudad: city.trim(),
+          email_contacto: email.trim() || '(non fornita)',
+          mensaje: message.trim() || '(nessuno)',
+          posicion: userLat != null && userLng != null
+            ? `${userLat.toFixed(4)}, ${userLng.toFixed(4)}`
+            : 'non condivisa',
+          url: typeof window !== 'undefined' ? window.location.href : '',
         }),
       });
       if (!res.ok) {

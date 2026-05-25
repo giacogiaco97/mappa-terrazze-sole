@@ -6,6 +6,7 @@ const OVERPASS = 'https://overpass-api.de/api/interpreter';
 const CITY_BBOX: Record<string, { bbox: string; label: string }> = {
   bcn: { bbox: '41.32,2.07,41.47,2.23', label: 'Barcellona' },
   mad: { bbox: '40.36,-3.80,40.52,-3.55', label: 'Madrid' },
+  sev: { bbox: '37.34,-6.05,37.43,-5.92', label: 'Siviglia' },
 };
 const CITY = (process.env.CITY ?? 'bcn').toLowerCase();
 const cityConf = CITY_BBOX[CITY];

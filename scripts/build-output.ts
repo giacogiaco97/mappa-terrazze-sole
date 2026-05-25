@@ -43,6 +43,13 @@ const CITIES: Record<string, CityConfig> = {
     bbox: [-3.80, 40.33, -3.55, 40.54],
     center: { lat: 40.4168, lng: -3.7038, zoom: 14 },
   },
+  sev: {
+    code: 'sev',
+    name: 'Sevilla',
+    displayName: { es: 'Sevilla', en: 'Seville', ca: 'Sevilla' },
+    bbox: [-6.05, 37.34, -5.92, 37.43],
+    center: { lat: 37.3886, lng: -5.9823, zoom: 14 },
+  },
 };
 
 const CITY = (process.env.CITY ?? 'bcn').toLowerCase();
@@ -85,16 +92,24 @@ async function readCitiesIndex(): Promise<{ cities: Record<string, CityConfig> }
 async function main(): Promise<void> {
   console.log(`\n=== Build output per città: ${cityConf.name} (${CITY}) ===\n`);
 
-  // Terrazze
-  const tRaw = JSON.parse(await readFile(TERRACES_IN, 'utf-8')) as { terraces: Terrace[] };
+  // Terrazze + meta source (per decidere se applicare arricchimento OSM o no)
+  const tRaw = JSON.parse(await readFile(TERRACES_IN, 'utf-8')) as { terraces: Terrace[]; source?: string };
+  const isOsmOnlyDataset = (tRaw.source ?? '').toLowerCase().includes('osm');
   let terraces: Terrace[] = tRaw.terraces.map((t) => ({
     ...t,
     lat: Math.round(t.lat * 1e5) / 1e5,
     lng: Math.round(t.lng * 1e5) / 1e5,
   }));
 
-  // Arricchimento OSM
-  if (await exists(POIS_IN)) {
+  // Arricchimento OSM. SOLO per dataset comunali (BCN dove il name è vuoto
+  // nel raw, Madrid dove il name è già 100% ma il match aggiunge POI vicini).
+  // Per dataset OSM-only (Sevilla/Valencia/Alicante via fetch-terraces-osm.ts)
+  // il nome è già il name OSM autoritativo: NON applichiamo match per non corrompere.
+  if (isOsmOnlyDataset) {
+    terraces = terraces.map((t) => ({ ...t, nameSource: 'osm' as const }));
+    const named = terraces.filter((t) => t.name).length;
+    console.log(`Dataset OSM-only: skippo match POI (nomi già autoritativi). ${named}/${terraces.length} con nome.`);
+  } else if (await exists(POIS_IN)) {
     const pRaw = JSON.parse(await readFile(POIS_IN, 'utf-8')) as { pois: RawPoi[] };
     const before = new Set(terraces.filter((t) => t.name !== t.address).map((t) => t.id));
     terraces = matchTerracesToPois(terraces, pRaw.pois, POI_MATCH_RADIUS_M);
@@ -173,9 +188,9 @@ async function main(): Promise<void> {
   };
   await writeFile(`${OUT_DIR}/meta.json`, JSON.stringify(meta, null, 2));
 
-  // Sanity checks (soglie più rilassate di prima: ci sono città più piccole)
-  if (terraces.length < 500) {
-    throw new Error(`Pipeline output sospetto: solo ${terraces.length} terrazze (< 500). Aborting.`);
+  // Sanity checks (soglie rilassate: città come Siviglia su OSM hanno <500 entries)
+  if (terraces.length < 100) {
+    throw new Error(`Pipeline output sospetto: solo ${terraces.length} terrazze (< 100). Aborting.`);
   }
   if (buildings.length < 5_000) {
     throw new Error(`Pipeline output sospetto: solo ${buildings.length} edifici (< 5000). Aborting.`);

@@ -1,0 +1,13 @@
+{
+  "city": "Sevilla",
+  "bbox": [
+    -6.05,
+    37.34,
+    -5.92,
+    37.43
+  ],
+  "generatedAt": "2026-05-25T09:57:10.045Z",
+  "gridStep": 0.01,
+  "buildingCount": 30490,
+  "terraceCount": 296
+}

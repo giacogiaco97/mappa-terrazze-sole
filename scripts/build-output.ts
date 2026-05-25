@@ -1,6 +1,8 @@
 import { readFile, writeFile, mkdir, rm, access } from 'node:fs/promises';
 import { chunkByGrid } from './lib/chunk-by-grid.js';
 import { matchTerracesToPois } from './lib/match-pois.js';
+import { haversineMeters } from '../src/lib/geometry.js';
+import { discoveredToTerrace, type DiscoveredPlace } from './discover-places.js';
 import type { RawPoi } from './fetch-osm-pois.js';
 import type { GooglePlaceMatch } from './fetch-google-places.js';
 import type { Building, Meta, Terrace } from '../src/types/index.js';
@@ -62,11 +64,14 @@ const TERRACES_IN = `data-raw/terraces-${CITY}.raw.json`;
 const BUILDINGS_IN = `data-raw/buildings-${CITY}.resolved.json`;
 const POIS_IN = `data-raw/osm-pois-${CITY}.raw.json`;
 const GOOGLE_IN = `data-raw/google-places-${CITY}.raw.json`;
+const DISCOVER_IN = `data-raw/discover-places-${CITY}.raw.json`;
 const OUT_DIR = `public/data/${CITY}`;
 const BUILDINGS_DIR = `${OUT_DIR}/buildings`;
 const CITIES_INDEX = `public/data/cities.json`;
 const GRID_STEP = 0.01; // ~1 km
 const POI_MATCH_RADIUS_M = 70;
+/** Soglia dedupe: una discovered è considerata duplicato se < 25m da una OSM */
+const DISCOVER_DEDUPE_M = 25;
 
 async function exists(path: string): Promise<boolean> {
   try { await access(path); return true; } catch { return false; }
@@ -144,6 +149,47 @@ async function main(): Promise<void> {
     );
   } else {
     console.warn(`!! ${GOOGLE_IN} mancante: salto l'arricchimento Google Places.`);
+  }
+
+  // Discovery: nuove terrazze scoperte via Google Places con outdoorSeating=true
+  // (per città dove OSM è sotto-coperto, es. Sevilla). Merge con dedupe per
+  // distanza ravvicinata + placeId esistente.
+  if (await exists(DISCOVER_IN)) {
+    const dRaw = JSON.parse(await readFile(DISCOVER_IN, 'utf-8')) as { places: DiscoveredPlace[] };
+    const [bLngMin, bLatMin, bLngMax, bLatMax] = cityConf.bbox;
+    // Filtro: outdoorSeating + dentro bbox della città (Google searchNearby
+    // può restituire luoghi entro radius anche fuori cella, e quindi fuori bbox)
+    const candidates = dRaw.places.filter((p) =>
+      p.outdoorSeating &&
+      p.lng >= bLngMin && p.lng <= bLngMax &&
+      p.lat >= bLatMin && p.lat <= bLatMax,
+    );
+    const skippedOutsideBbox = dRaw.places.filter((p) => p.outdoorSeating).length - candidates.length;
+    const existingPlaceIds = new Set(terraces.filter((t) => t.placeId).map((t) => t.placeId!));
+    let added = 0;
+    let skippedDupePlaceId = 0;
+    let skippedDupeNear = 0;
+    for (const p of candidates) {
+      // Dedupe per placeId già presente
+      if (existingPlaceIds.has(p.placeId)) {
+        skippedDupePlaceId++;
+        continue;
+      }
+      // Dedupe per coordinate ravvicinate (< 25m da una OSM esistente)
+      const near = terraces.find((t) => haversineMeters(t.lat, t.lng, p.lat, p.lng) < DISCOVER_DEDUPE_M);
+      if (near) {
+        // Se la near non ha placeId, glielo allego (link Google Maps pixel-perfect)
+        if (!near.placeId) near.placeId = p.placeId;
+        skippedDupeNear++;
+        continue;
+      }
+      const newTerrace = discoveredToTerrace(p, CITY.toUpperCase());
+      terraces.push(newTerrace);
+      added++;
+    }
+    console.log(
+      `Discovery Google: candidati ${candidates.length} (fuori bbox: ${skippedOutsideBbox}) → aggiunti ${added}, dedupe placeId ${skippedDupePlaceId}, dedupe coordinate ${skippedDupeNear}.`,
+    );
   }
 
   // Edifici

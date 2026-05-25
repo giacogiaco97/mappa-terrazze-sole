@@ -1,14 +1,23 @@
-// Arricchimento Google Places per terrazze BCN ancora senza nome dopo il match OSM.
+// Arricchimento Google Places per TUTTE le terrazze di una città.
 //
-// Strategia: per ogni terrazza il cui `name` coincide ancora con `address` (= no match OSM),
-// chiama Places API (New) v1 `searchNearby` nel raggio 30m, prende il primo locale di tipo
-// gastronomico e salva (placeId, name, lat, lng). Cache su disco per resume in caso di
-// interruzione: rieseguendo lo script salta le terrazze già processate.
+// Strategia: per ogni terrazza chiama Places API (New) v1 `searchNearby` nel
+// raggio 30m, prende il primo locale gastronomico, salva (placeId, name, lat,
+// lng). Cache su disco per resume in caso di interruzione: rieseguendo lo
+// script salta le terrazze già processate.
 //
-// Costo: Places Search Nearby = $32 per 1000 chiamate (Essentials SKU). Con FieldMask
-// limitato a id+displayName+location, restiamo nel pricing essentials. Per Barcellona
-// (~1900 terrazze senza nome) costo previsto: ~$60 una tantum, coperto dal free tier
-// $200/mese di Google Cloud.
+// Il build-output decide come usare i match:
+//   - se la terrazza ha già un name autoritativo (dataset comunale BCN/MAD o
+//     OSM nativo), allega SOLO il placeId per il link Google Maps pixel-perfect
+//   - se name è ancora vuoto/uguale ad address (BCN dopo OSM match fallito),
+//     usa name+placeId di Google come fallback
+//
+// Costo: Places Search Nearby = $32 per 1000 chiamate (Essentials SKU). Con
+// FieldMask limitato a id+displayName+location+types, restiamo nel pricing
+// essentials. Esempi: BCN ~6900 = $220, Madrid ~6400 = $200, Sevilla 296 = $10,
+// coperti dal free tier $200/mese di Google Cloud.
+//
+// Env var SKIP_NAMED=1 forza il vecchio comportamento (solo terrazze senza
+// nome), utile per risparmiare costi se il placeId non interessa.
 //
 // API key: variabile d'ambiente GOOGLE_PLACES_API_KEY (o .env.local).
 import { readFile, writeFile, mkdir, access } from 'node:fs/promises';
@@ -134,21 +143,36 @@ async function main(): Promise<void> {
     return; // soft exit: la pipeline prosegue con la sola copertura OSM
   }
 
-  // 1. Carica raw terraces + OSM POI
+  // 1. Carica raw terraces
   const tRaw = JSON.parse(await readFile(TERRACES_IN, 'utf-8')) as { terraces: Terrace[] };
-  const pRaw = JSON.parse(await readFile(POIS_IN, 'utf-8')) as { pois: RawPoi[] };
+  const skipNamed = process.env.SKIP_NAMED === '1';
 
-  // 2. Replica match OSM (stessa logica/raggio di build-output) per individuare i buchi
-  const withOsm = matchTerracesToPois(tRaw.terraces, pRaw.pois, 70);
-  const missing = withOsm.filter((t) => t.name === t.address);
-  console.log(`Terrazze totali: ${tRaw.terraces.length}`);
-  console.log(`Già con nome OSM: ${tRaw.terraces.length - missing.length}`);
-  console.log(`Da arricchire via Google: ${missing.length}`);
+  // 2. Determina target. Default: tutte le terrazze (per ottenere placeId
+  //    per il link Google Maps pixel-perfect su ogni card). Con SKIP_NAMED=1
+  //    saltiamo le già-nominate (modalità risparmio costi, usata in passato).
+  let target: Terrace[];
+  if (skipNamed) {
+    if (await exists(POIS_IN)) {
+      const pRaw = JSON.parse(await readFile(POIS_IN, 'utf-8')) as { pois: RawPoi[] };
+      const withOsm = matchTerracesToPois(tRaw.terraces, pRaw.pois, 70);
+      target = withOsm.filter((t) => t.name === t.address);
+    } else {
+      target = tRaw.terraces.filter((t) => !t.name || t.name === t.address);
+    }
+    console.log(`Modalità SKIP_NAMED: solo terrazze senza nome (${target.length}/${tRaw.terraces.length})`);
+  } else {
+    target = tRaw.terraces;
+    console.log(`Modalità default: arricchimento placeId per TUTTE le terrazze (${target.length})`);
+  }
+
+  // Stima costo (Essentials SKU $32/1000)
+  const estCost = (target.length / 1000) * 32;
+  console.log(`Costo stimato (Essentials SKU): ~$${estCost.toFixed(2)}`);
 
   // 3. Cache: salta già processate (sia match riusciti che falliti)
   const cache = await loadCache();
   const seen = new Set<string>([...cache.matches.map((m) => m.terraceId), ...cache.triedNoMatch]);
-  const todo = missing.filter((t) => !seen.has(t.id));
+  const todo = target.filter((t) => !seen.has(t.id));
   console.log(`Già in cache: ${seen.size}. Restanti da chiamare: ${todo.length}`);
 
   // 4. Chiama Google Places per le restanti
@@ -192,9 +216,9 @@ async function main(): Promise<void> {
   await mkdir('data-raw', { recursive: true });
   await writeFile(OUT_FILE, JSON.stringify(cache));
 
-  const coverageGoogle = ((cache.matches.length / missing.length) * 100).toFixed(1);
+  const coverageGoogle = ((cache.matches.length / target.length) * 100).toFixed(1);
   console.log(
-    `Google Places: ${cache.matches.length}/${missing.length} terrazze senza-nome arricchite (${coverageGoogle}%).`,
+    `Google Places: ${cache.matches.length}/${target.length} terrazze processate con match (${coverageGoogle}%).`,
   );
   console.log(`Output: ${OUT_FILE}`);
 }

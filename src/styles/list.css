@@ -28,6 +28,26 @@
 
 .list { display: flex; flex-direction: column; gap: 4px; }
 .list__empty { padding: 20px 4px; color: var(--text-muted, #777); font-size: 14px; text-align: center; }
+.list__empty-reset {
+  background: transparent;
+  border: 0;
+  padding: 4px 6px;
+  margin-left: 2px;
+  color: var(--brand, #f5a623);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  min-height: 32px;
+}
+.list__empty-reset:hover, .list__empty-reset:focus-visible {
+  color: var(--text);
+  text-decoration: none;
+  background: color-mix(in srgb, var(--brand, #f5a623) 14%, transparent);
+  border-radius: 6px;
+}
+.list__empty-reset:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
 .list__sentinel { height: 1px; }
 
 /* Banner cliccabile mostrato finché non c'è la posizione utente. Tinta brand

@@ -1,6 +1,8 @@
 {
   "appName": "Sunny terraces",
   "sunnyNearby": "{count} sunny terraces near you",
+  "sunnyInCity": "{count} sunny terraces in Barcelona",
+  "listEmptyResetHint": "Clear filters",
   "openInGoogleMaps": "Open in Google Maps",
   "sunnyUntil": "Sunny until {time}",
   "tables": "{n} tables",

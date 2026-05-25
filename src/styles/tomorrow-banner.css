@@ -28,11 +28,11 @@
 }
 .tomorrow-banner__close {
   flex-shrink: 0;
-  width: 28px; height: 28px;
+  width: 36px; height: 36px;
   background: rgba(255,255,255,0.4);
   border: 0;
   border-radius: 50%;
-  font-size: 18px;
+  font-size: 20px;
   line-height: 1;
   color: #1a1a1a;
   cursor: pointer;

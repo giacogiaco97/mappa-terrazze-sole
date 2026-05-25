@@ -69,10 +69,11 @@
   font-size: 14px;
 }
 .time-slider__now {
-  background: var(--brand); color: var(--brand-text); border: 0; padding: 6px 12px; border-radius: 999px;
+  background: var(--brand); color: var(--brand-text); border: 0; padding: 8px 14px; border-radius: 999px;
   font-weight: 700; font-size: 14px; cursor: pointer;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
+  min-height: 36px;
 }
 .time-slider__sunset {
   color: var(--sun); font-weight: 600;

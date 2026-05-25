@@ -88,6 +88,14 @@ html, body, #root, .app-root {
   font-size: 13px; color: #6b3a00;
   z-index: 7;
 }
+
+/* Tap target ≥36px per i controlli zoom MapLibre (default 29px è sotto le
+   linee guida HIG/WCAG 2.5.5 ≥44, riportiamo a 38). */
+.maplibregl-ctrl-group button.maplibregl-ctrl-zoom-in,
+.maplibregl-ctrl-group button.maplibregl-ctrl-zoom-out {
+  width: 38px !important;
+  height: 38px !important;
+}
 @media (min-width: 1024px) {
   .edge-banner {
     left: 396px;

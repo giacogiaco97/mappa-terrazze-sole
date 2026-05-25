@@ -128,23 +128,35 @@ export default function App() {
   }, [setNow]);
 
   const sunnyCount = Object.values(states).filter((s) => s === 'sun').length;
+  const userPos = useStore((s) => s.userPos);
+  const selectedId = useStore((s) => s.selectedId);
 
   const outsideBcn =
     geo.status === 'ok' &&
     (geo.lng < 2.0 || geo.lng > 2.3 || geo.lat < 41.3 || geo.lat > 41.5);
+
+  // Etichetta sheet contestuale: con posizione → "cerca de ti", senza → "en Barcelona"
+  const sheetLabel = userPos
+    ? t('sunnyNearby', { count: sunnyCount })
+    : t('sunnyInCity', { count: sunnyCount });
+
+  // Banner edge: nascosti se la card è aperta (per non distrarre) o se la posizione
+  // è ormai disponibile (lo stato 'denied' può persistere se l'utente attiva via CTA).
+  const showGeoDeniedBanner = geo.status === 'denied' && !userPos && !selectedId;
+  const showOutsideBcnBanner = outsideBcn && !selectedId;
 
   return (
     <div className="app-root">
       <MapView onMapReady={setMap} />
       {map && <Markers map={map} />}
       <TimeSlider />
-      {geo.status === 'denied' && (
+      {showGeoDeniedBanner && (
         <div className="edge-banner" role="status">{t('geoDenied')}</div>
       )}
-      {outsideBcn && (
+      {showOutsideBcnBanner && (
         <div className="edge-banner" role="status">{t('outsideBcn')}</div>
       )}
-      <BottomSheet collapsedLabel={t('sunnyNearby', { count: sunnyCount })}>
+      <BottomSheet collapsedLabel={sheetLabel}>
         <TerraceList onSelectTerrace={setSelectedId} />
       </BottomSheet>
       <TerraceCard />
@@ -152,7 +164,7 @@ export default function App() {
       <CreditsButton />
       <Onboarding />
       <UpdatePrompt />
-      <TomorrowBanner />
+      {!selectedId && <TomorrowBanner />}
     </div>
   );
 }

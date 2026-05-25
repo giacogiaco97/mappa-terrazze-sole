@@ -1,11 +1,13 @@
 .credits-btn {
   position: absolute; right: 12px; top: calc(env(safe-area-inset-top, 0px) + 64px);
-  width: 32px; height: 32px; border-radius: 50%;
+  width: 44px; height: 44px; border-radius: 50%;
   background: var(--bg-elev); color: var(--text);
   border: 0; box-shadow: 0 2px 6px rgba(0,0,0,0.18);
   font-style: italic; font-weight: 700;
+  font-size: 16px;
   z-index: 3;
   cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
 }
 .credits-backdrop {
   position: fixed; inset: 0;

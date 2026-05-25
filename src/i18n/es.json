@@ -1,6 +1,8 @@
 {
   "appName": "Terrazas al sol",
   "sunnyNearby": "{count} terrazas al sol cerca de ti",
+  "sunnyInCity": "{count} terrazas al sol en Barcelona",
+  "listEmptyResetHint": "Limpiar filtros",
   "openInGoogleMaps": "Abrir en Google Maps",
   "sunnyUntil": "Al sol hasta las {time}",
   "tables": "{n} mesas",

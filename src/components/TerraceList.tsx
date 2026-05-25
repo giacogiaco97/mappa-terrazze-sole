@@ -130,7 +130,21 @@ export default function TerraceList({ onSelectTerrace }: Props) {
           <div ref={sentinelRef} className="list__sentinel" aria-hidden="true" />
         )}
         {filtered.length === 0 && (
-          <p className="list__empty">{t('listEmpty')}</p>
+          <p className="list__empty">
+            {t('listEmpty')}
+            {(search || minTables > 0 || showShade) && (
+              <>
+                {' · '}
+                <button
+                  type="button"
+                  className="list__empty-reset"
+                  onClick={() => { setSearch(''); setMinTables(0); setShowShade(false); }}
+                >
+                  {t('listEmptyResetHint')}
+                </button>
+              </>
+            )}
+          </p>
         )}
       </div>
     </div>

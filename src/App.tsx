@@ -11,6 +11,7 @@ import CreditsButton from './components/CreditsButton.js';
 import Onboarding from './components/Onboarding.js';
 import UpdatePrompt from './components/UpdatePrompt.js';
 import TomorrowBanner from './components/TomorrowBanner.js';
+import SheetFab from './components/SheetFab.js';
 import { useGeolocation } from './lib/use-geolocation.js';
 import { useUrlSync } from './lib/use-url-sync.js';
 import { useStore } from './store/use-store.js';
@@ -130,6 +131,8 @@ export default function App() {
   const sunnyCount = Object.values(states).filter((s) => s === 'sun').length;
   const userPos = useStore((s) => s.userPos);
   const selectedId = useStore((s) => s.selectedId);
+  // Stato drawer mobile (su desktop >=1024px la sidebar è sempre visibile via CSS)
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   const outsideBcn =
     geo.status === 'ok' &&
@@ -145,6 +148,12 @@ export default function App() {
   const showGeoDeniedBanner = geo.status === 'denied' && !userPos && !selectedId;
   const showOutsideBcnBanner = outsideBcn && !selectedId;
 
+  // Selezione terrazza dalla lista → chiudo il drawer per non sovrapporre alla card
+  const onSelectFromList = (id: string) => {
+    setSelectedId(id);
+    setSheetOpen(false);
+  };
+
   return (
     <div className="app-root">
       <MapView onMapReady={setMap} />
@@ -156,15 +165,25 @@ export default function App() {
       {showOutsideBcnBanner && (
         <div className="edge-banner" role="status">{t('outsideBcn')}</div>
       )}
-      <BottomSheet collapsedLabel={sheetLabel}>
-        <TerraceList onSelectTerrace={setSelectedId} />
+      <BottomSheet
+        collapsedLabel={sheetLabel}
+        open={sheetOpen}
+        onClose={() => setSheetOpen(false)}
+      >
+        <TerraceList onSelectTerrace={onSelectFromList} />
       </BottomSheet>
+      <SheetFab
+        onClick={() => setSheetOpen(true)}
+        label={sheetLabel}
+        count={sunnyCount}
+        visible={!sheetOpen && !selectedId}
+      />
       <TerraceCard />
       <GeolocateButton map={map} />
       <CreditsButton />
       <Onboarding />
       <UpdatePrompt />
-      {!selectedId && <TomorrowBanner />}
+      {!selectedId && !sheetOpen && <TomorrowBanner />}
     </div>
   );
 }

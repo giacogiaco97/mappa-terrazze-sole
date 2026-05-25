@@ -7,6 +7,8 @@
   "outsideCity": "We only cover {city} for now",
   "switchCityPrompt": "You're in {city}",
   "switchCityAction": "View {city}",
+  "mapOutOfCoverage": "This area isn't covered yet",
+  "mapOutOfCoverageAction": "Request it",
   "noCityTitle": "We don't cover your area yet",
   "noCityIntro": "For now the app is available in these cities. Pick one to get started:",
   "requestNewCity": "Request my city",

@@ -7,6 +7,8 @@
   "outsideCity": "De moment només cobrim {city}",
   "switchCityPrompt": "Estàs a {city}",
   "switchCityAction": "Veure {city}",
+  "mapOutOfCoverage": "Aquesta zona encara no està coberta",
+  "mapOutOfCoverageAction": "Demanar-la",
   "noCityTitle": "Encara no cobrim la teva zona",
   "noCityIntro": "Per ara l'app està disponible en aquestes ciutats. Tria'n una per començar:",
   "requestNewCity": "Demanar la meva ciutat",

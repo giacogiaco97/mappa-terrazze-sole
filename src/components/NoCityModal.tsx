@@ -20,17 +20,20 @@ type Props = {
   userLat?: number;
   userLng?: number;
   onClose: () => void;
+  /** Apre il modal direttamente nel form (skip lista città).
+   *  Usato quando l'utente naviga la mappa fuori da tutte le città coperte. */
+  initialForm?: boolean;
 };
 
 type SubmitState = 'idle' | 'submitting' | 'success' | 'error';
 
-export default function NoCityModal({ open, userLat, userLng, onClose }: Props) {
+export default function NoCityModal({ open, userLat, userLng, onClose, initialForm }: Props) {
   const cities = useStore((s) => s.cities);
   const setCurrentCity = useStore((s) => s.setCurrentCity);
   const modalRef = useRef<HTMLDivElement>(null);
   useModalDismiss(open, onClose, modalRef);
 
-  const [showForm, setShowForm] = useState(false);
+  const [showForm, setShowForm] = useState(!!initialForm);
   const [city, setCity] = useState('');
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');

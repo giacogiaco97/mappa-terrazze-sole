@@ -141,6 +141,30 @@ html, body, #root, .app-root {
   outline: 2px solid var(--text);
   outline-offset: 2px;
 }
+
+.edge-banner__close {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 22px;
+  line-height: 1;
+  font-weight: 300;
+  cursor: pointer;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin-left: -4px;
+}
+.edge-banner__close:hover { background: var(--bg-input); color: var(--text); }
+.edge-banner__close:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
 :root[data-theme='dark'] .edge-banner,
 :root:not([data-theme='light']) .edge-banner {
   /* tema scuro: banner contrastato comunque su giallo chiaro */

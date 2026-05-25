@@ -192,20 +192,54 @@ export default function App() {
 
   const showGeoDeniedBanner = geo.status === 'denied' && !userPos && !selectedId;
   // L'utente è dentro una città disponibile DIVERSA da quella che sta vedendo
-  // → suggeriamo lo switch.
+  // → suggeriamo lo switch. Dismiss esplicito tramite X.
   const suggestCity = geoCityCode && geoCityCode !== currentCity ? cities[geoCityCode] : null;
-  const showSwitchCityBanner = suggestCity && !selectedId && !sheetOpen;
+  const [switchCityDismissedFor, setSwitchCityDismissedFor] = useState<string | null>(null);
+  const showSwitchCityBanner =
+    suggestCity && !selectedId && !sheetOpen && switchCityDismissedFor !== suggestCity.code;
 
   // Modal "no data": geo OK + fuori da TUTTE le città + cities caricate.
-  // Lascia comunque all'utente la possibilità di chiuderla e usare l'app
-  // con la città scelta manualmente (default BCN o ultima salvata).
   const [noCityDismissed, setNoCityDismissed] = useState(false);
-  const showNoCityModal =
+  const [noCityInitialForm, setNoCityInitialForm] = useState(false);
+  const showNoCityModalByGeo =
     geo.status === 'ok' &&
     Object.keys(cities).length > 0 &&
     geoCityCode === null &&
     !noCityDismissed &&
     !selectedId;
+
+  // Detect navigazione mappa fuori da tutte le città coperte. Attivo solo
+  // a zoom ≥ 9 (l'utente sta esaminando un'area specifica, non vista globale).
+  const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number; zoom: number } | null>(null);
+  useEffect(() => {
+    if (!map) return;
+    const onMove = () => {
+      const c = map.getCenter();
+      setMapCenter({ lat: c.lat, lng: c.lng, zoom: map.getZoom() });
+    };
+    map.on('moveend', onMove);
+    onMove();
+    return () => { map.off('moveend', onMove); };
+  }, [map]);
+
+  const mapInACoveredCity = mapCenter && Object.values(cities).some((c) => {
+    const [lngMin, latMin, lngMax, latMax] = c.bbox;
+    return mapCenter.lng > lngMin && mapCenter.lng < lngMax &&
+           mapCenter.lat > latMin && mapCenter.lat < latMax;
+  });
+  const [mapOutDismissed, setMapOutDismissed] = useState(false);
+  // Reset dismiss quando l'utente torna in una città coperta
+  useEffect(() => { if (mapInACoveredCity) setMapOutDismissed(false); }, [mapInACoveredCity]);
+  const showMapOutBanner =
+    mapCenter != null &&
+    !mapInACoveredCity &&
+    mapCenter.zoom >= 9 &&
+    Object.keys(cities).length > 0 &&
+    !mapOutDismissed &&
+    !showSwitchCityBanner &&
+    !showNoCityModalByGeo &&
+    !selectedId &&
+    !sheetOpen;
 
   const onSelectFromList = (id: string) => {
     setSelectedId(id);
@@ -230,6 +264,34 @@ export default function App() {
           >
             {t('switchCityAction', { city: suggestCity.name })}
           </button>
+          <button
+            type="button"
+            className="edge-banner__close"
+            onClick={() => setSwitchCityDismissedFor(suggestCity.code)}
+            aria-label={t('close')}
+          >
+            <span aria-hidden="true">×</span>
+          </button>
+        </div>
+      )}
+      {showMapOutBanner && (
+        <div className="edge-banner edge-banner--action" role="status">
+          <span>{t('mapOutOfCoverage')}</span>
+          <button
+            type="button"
+            className="edge-banner__action"
+            onClick={() => { setNoCityInitialForm(true); setNoCityDismissed(false); }}
+          >
+            {t('mapOutOfCoverageAction')}
+          </button>
+          <button
+            type="button"
+            className="edge-banner__close"
+            onClick={() => setMapOutDismissed(true)}
+            aria-label={t('close')}
+          >
+            <span aria-hidden="true">×</span>
+          </button>
         </div>
       )}
       <BottomSheet
@@ -252,10 +314,14 @@ export default function App() {
       <Onboarding />
       <UpdatePrompt />
       <NoCityModal
-        open={showNoCityModal}
-        userLat={geo.status === 'ok' ? geo.lat : undefined}
-        userLng={geo.status === 'ok' ? geo.lng : undefined}
-        onClose={() => setNoCityDismissed(true)}
+        open={showNoCityModalByGeo || noCityInitialForm}
+        initialForm={noCityInitialForm}
+        userLat={mapCenter?.lat ?? (geo.status === 'ok' ? geo.lat : undefined)}
+        userLng={mapCenter?.lng ?? (geo.status === 'ok' ? geo.lng : undefined)}
+        onClose={() => {
+          setNoCityDismissed(true);
+          setNoCityInitialForm(false);
+        }}
       />
       {!selectedId && !sheetOpen && <TomorrowBanner />}
     </div>

@@ -60,11 +60,6 @@ const CITY_BBOX: Record<string, CityConf> = {
 };
 
 const CITY = (process.env.CITY ?? '').toLowerCase();
-const cityConf = CITY_BBOX[CITY];
-if (!cityConf) {
-  throw new Error(`CITY ignota: '${CITY}'. Valori validi: ${Object.keys(CITY_BBOX).join(', ')}`);
-}
-
 const OUT_FILE = `data-raw/discover-places-${CITY}.raw.json`;
 
 type DiscoveredPlace = {
@@ -175,6 +170,10 @@ function gridCellsForBbox(
 }
 
 async function main(): Promise<void> {
+  const cityConf = CITY_BBOX[CITY];
+  if (!cityConf) {
+    throw new Error(`CITY ignota: '${CITY}'. Valori validi: ${Object.keys(CITY_BBOX).join(', ')}`);
+  }
   const apiKey = process.env.GOOGLE_PLACES_API_KEY;
   if (!apiKey) {
     console.error('!! GOOGLE_PLACES_API_KEY mancante.');

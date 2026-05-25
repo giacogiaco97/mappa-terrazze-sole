@@ -11,9 +11,11 @@ type Props = {
    */
   open?: boolean;
   onClose?: () => void;
+  /** Slot opzionale renderizzato in cima al sheet (es. CityPicker). */
+  headerSlot?: React.ReactNode;
 };
 
-export default function BottomSheet({ collapsedLabel, children, open, onClose }: Props) {
+export default function BottomSheet({ collapsedLabel, children, open, onClose, headerSlot }: Props) {
   const [expanded, setExpanded] = useState(false);
   const startY = useRef<number | null>(null);
   const [dragY, setDragY] = useState(0);
@@ -60,6 +62,7 @@ export default function BottomSheet({ collapsedLabel, children, open, onClose }:
         className={`bottom-sheet ${expanded ? 'bottom-sheet--expanded' : ''} ${drawerCls}`}
         style={!isControlled && dragY ? { transform: `translateY(${dragY}px)` } : undefined}
       >
+        {headerSlot && <div className="bottom-sheet__header-slot">{headerSlot}</div>}
         <button
           className="bottom-sheet__handle"
           onClick={() => isControlled ? onClose?.() : setExpanded((v) => !v)}

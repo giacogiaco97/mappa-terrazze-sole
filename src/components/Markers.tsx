@@ -2,6 +2,20 @@ import { useEffect } from 'react';
 import type { Map as MLMap, GeoJSONSource, MapMouseEvent } from 'maplibre-gl';
 import { useStore, type TerraceStatus } from '../store/use-store.js';
 
+const SOURCE_ID = 'terraces-src';
+const LAYER_ID = 'terraces-layer';
+const CLUSTER_LAYER_ID = 'terraces-cluster';
+const CLUSTER_COUNT_LAYER_ID = 'terraces-cluster-count';
+
+function removeMarkersFromMap(map: MLMap): void {
+  try {
+    if (map.getLayer(CLUSTER_COUNT_LAYER_ID)) map.removeLayer(CLUSTER_COUNT_LAYER_ID);
+    if (map.getLayer(CLUSTER_LAYER_ID)) map.removeLayer(CLUSTER_LAYER_ID);
+    if (map.getLayer(LAYER_ID)) map.removeLayer(LAYER_ID);
+    if (map.getSource(SOURCE_ID)) map.removeSource(SOURCE_ID);
+  } catch { /* ignore */ }
+}
+
 const COLORS: Record<TerraceStatus, string> = {
   sun: '#f5a623',
   shade: '#3a6ea5',
@@ -15,12 +29,24 @@ type Props = { map: MLMap };
 export default function Markers({ map }: Props) {
   const terraces = useStore((s) => s.terraces);
   const states = useStore((s) => s.states);
+  const currentCity = useStore((s) => s.currentCity);
+
+  // Effect dedicato al cambio città: rimuove source+layers vecchi (terrazze BCN
+  // restano altrimenti in cache MapLibre e non si vedono quelle Madrid).
+  // Il prossimo render dell'effect principale ricostruirà tutto da zero.
+  useEffect(() => {
+    if (!map) return;
+    removeMarkersFromMap(map);
+    // intentionally no cleanup: la pulizia è il punto di questo effect
+  }, [map, currentCity]);
 
   useEffect(() => {
-    const sourceId = 'terraces-src';
-    const layerId = 'terraces-layer';
-    const clusterLayerId = 'terraces-cluster';
-    const clusterCountLayerId = 'terraces-cluster-count';
+    const sourceId = SOURCE_ID;
+    const layerId = LAYER_ID;
+    const clusterLayerId = CLUSTER_LAYER_ID;
+    const clusterCountLayerId = CLUSTER_COUNT_LAYER_ID;
+
+    if (!terraces.length) return;
 
     const upsert = () => {
       const features = terraces.map((tr) => ({
@@ -150,8 +176,21 @@ export default function Markers({ map }: Props) {
       map.on('mouseleave', clusterLayerId, resetPointer);
     };
 
-    if (map.isStyleLoaded()) upsert();
-    else map.once('load', upsert);
+    // Robustezza: oltre a 'load' (che NON scatta più dopo il primo load),
+    // ascoltiamo anche 'styledata' che firma ogni volta che lo style è pronto.
+    // Critico per il cambio città dopo la rimozione esplicita delle sorgenti.
+    if (map.isStyleLoaded()) {
+      upsert();
+    } else {
+      const onStyleReady = () => {
+        if (map.isStyleLoaded()) {
+          upsert();
+          map.off('styledata', onStyleReady);
+        }
+      };
+      map.on('styledata', onStyleReady);
+      map.once('load', upsert);
+    }
   }, [map, terraces, states]);
 
   return null;

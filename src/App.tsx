@@ -197,7 +197,6 @@ export default function App() {
     <div className="app-root">
       <MapView onMapReady={setMap} />
       {map && <Markers map={map} />}
-      <CityPicker />
       <TimeSlider />
       {showGeoDeniedBanner && (
         <div className="edge-banner" role="status">{t('geoDenied')}</div>
@@ -209,6 +208,7 @@ export default function App() {
         collapsedLabel={sheetLabel}
         open={sheetOpen}
         onClose={() => setSheetOpen(false)}
+        headerSlot={<CityPicker />}
       >
         <TerraceList onSelectTerrace={onSelectFromList} />
       </BottomSheet>

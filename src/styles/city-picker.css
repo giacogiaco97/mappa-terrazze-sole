@@ -1,32 +1,36 @@
-/* === City Picker: pillola top-left per cambiare città === */
+/* === City Picker: dentro l'header del drawer/sidebar === */
+.bottom-sheet__header-slot {
+  padding: 12px 16px 0;
+  display: flex;
+  justify-content: stretch;
+}
+
 .city-picker {
-  position: absolute;
-  top: calc(env(safe-area-inset-top, 0px) + 12px);
-  left: 12px;
-  z-index: 6;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 10px 6px 12px;
-  background: var(--bg-elev);
+  gap: 8px;
+  padding: 8px 12px 8px 14px;
+  background: var(--bg-input);
   color: var(--text);
   border: 1px solid var(--border);
   border-radius: 999px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
   cursor: pointer;
-  font-weight: 600;
-  font-size: 13px;
-  min-height: 36px;
+  font-weight: 700;
+  font-size: 14px;
+  min-height: 40px;
+  width: 100%;
+  max-width: 100%;
 }
-.city-picker:hover { background: var(--bg-input); }
+.city-picker:hover { background: var(--bg-elev); }
 .city-picker:focus-within {
   outline: 2px solid var(--brand);
   outline-offset: 2px;
 }
 
 .city-picker__icon {
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1;
+  flex-shrink: 0;
 }
 
 .city-picker__select {
@@ -37,27 +41,26 @@
   border: 0;
   font: inherit;
   color: inherit;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
-  padding-right: 4px;
-  /* hide default arrow */
+  padding: 0;
+  flex: 1;
+  text-align: left;
   background-image: none;
 }
 .city-picker__select:focus { outline: none; }
 
 .city-picker__chevron {
-  font-size: 10px;
+  font-size: 12px;
   line-height: 1;
   color: var(--text-muted);
   pointer-events: none;
+  flex-shrink: 0;
 }
 
-/* Su desktop ≥1024px sta dentro la sidebar (header), in alto */
+/* Desktop ≥1024px: city picker resta in cima alla sidebar */
 @media (min-width: 1024px) {
-  .city-picker {
-    top: 12px;
-    left: 12px;
-    /* La sidebar è 380px a sinistra, posiziono il picker DENTRO la sidebar */
-    z-index: 5;
+  .bottom-sheet__header-slot {
+    padding: 16px 20px 0;
   }
 }

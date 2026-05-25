@@ -29,6 +29,10 @@ export default function MapView({ onMapReady }: Props) {
     // precachato dal service worker dopo il primo visit.
     onMapReady?.(map);
     mapRef.current = map;
+    // DEBUG: expose map globally for inspection in browser console
+    if (typeof window !== 'undefined') {
+      (window as Window & { __mtsMap?: MLMap }).__mtsMap = map;
+    }
     return () => { map.remove(); mapRef.current = null; };
   }, [onMapReady]);
 

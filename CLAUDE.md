@@ -2,7 +2,7 @@
 
 PWA mobile-first che mostra in tempo reale quali terrazze di Barcellona sono al sole.
 
-- **Lancio:** Barcellona (estendibile multi-città in Fase 4)
+- **Città coperte:** Barcellona, Madrid (multi-città dal 2026-05-25)
 - **Stack:** Vite 8 + React 19 + TypeScript + MapLibre 5 + suncalc + RBush + Zustand + vite-plugin-pwa
 - **Hosting:** Vercel (primario) + GitHub Pages (fallback)
 - **URL live:** https://mappa-terrazze-sole.vercel.app
@@ -33,6 +33,16 @@ PWA mobile-first che mostra in tempo reale quali terrazze di Barcellona sono al 
 - **Cluster + drawer mobile (round 2)** (2026-05-25) — Feedback utente post-deploy: cluster troppo tenaci e lista bottom in confusione.
   - **PR4 — cluster meno aggressivo** (`432f75e`): `src/components/Markers.tsx`. clusterRadius 28→16 (aggrega solo veri overlap, non più locali su lati opposti della via). clusterMaxZoom 17→14 (a zoom 15+ marker singoli garantiti). Click cluster: zoom = max(expansionZoom + 0.5, currentZoom + 2) capped a 19, per spaccare la bolla in un singolo click (era +0.5 dal solo expansion zoom → spesso insufficiente).
   - **PR5 — drawer laterale mobile + FAB** (`ce030db`): mobile <1024px → BottomSheet diventa drawer slide-from-left (width min(360,92vw), full-height) controllato da prop `open`. Nuovo `SheetFab` (pillola brand "☀️ N" centrata in basso) che apre il drawer al tap, si nasconde quando drawer aperto o card selezionata. Backdrop scuro rgba(0,0,0,0.40) + blur(3px), click+ESC chiudono. Selezione terrazza dalla lista chiude il drawer per non sovrapporsi alla card. TomorrowBanner si nasconde quando il drawer è aperto. Desktop ≥1024px invariato: sidebar sempre visibile (transform:none !important neutralizza il drawer slide), FAB display:none. BottomSheet retro-compatibile (prop `open` opzionale).
+- **Multi-città (Fase 4 inizio)** (2026-05-25) — Prima città extra oltre Barcellona: Madrid. PR6 (`8dab4a6`).
+  - **Dataset Madrid**: 6397 terrazze da Open Data Madrid "Censo de locales y sus actividades. Terrazas" (dataset id 200085-6, license CC BY 4.0). 100% nomi commerciali via campo `rotulo`. 119671 edifici OSM bbox 40.33-40.54 / -3.80--3.55 (centro + barrios principali). Heights: 443 osm + 20558 levels + 98670 default.
+  - **UTM → WGS84**: nuova lib `scripts/lib/utm-to-wgs84.ts` (zona 30N, formula USGS, zero deps), 4 test TDD. Madrid usa coordinate UTM ETRS89 30N (X,Y in metri).
+  - **Pipeline parametrica**: env var `CITY=bcn|mad` su tutti gli script (fetch-buildings, fetch-osm-pois, fetch-google-places, resolve-heights, build-output). File raw rinominati con suffisso `-{city}`. Nuovi npm scripts: `pipeline:bcn`, `pipeline:mad`, `pipeline:run`.
+  - **Refactor public/data**: ora `public/data/{city}/{terraces,meta,buildings/*.json}` invece di root. Nuovo `public/data/cities.json` come indice (mantenuto/aggiornato da build-output durante merge multi-città).
+  - **Front-end multi-città**: store con `currentCity` persisted in localStorage (`mts.currentCity`), `cities` indice. `data-loader.ts` parametri `city` su tutte le fetch. App.tsx carica/ricarica dati al cambio città, flyTo al centro, fetch weather sul centro corrente, cache edifici svuotata al cambio.
+  - **CityPicker** (`src/components/CityPicker.tsx` + `city-picker.css`): dropdown pillola top-left con icona 🌆 + select tra città disponibili. Hidden se solo 1 città. Su desktop sta sopra alla sidebar.
+  - **i18n contestuale**: `outsideBcn` → `outsideCity` con placeholder `{city}`. `sunnyInCity` con `{city}`. Nuovi `cityPickerLabel`. ES/EN/CA.
+  - **Output**: 91/91 test (87 + 4 UTM). Bundle 1.27MB / 352KB gzip. +34MB dati Madrid (totale 63MB statici, ok per Vercel).
+  - Google Places NON eseguito per Madrid (i nomi sono già 100% da dataset, serve solo per link Google Maps pixel-perfect). Lanciare manualmente con `CITY=mad npm run pipeline:google` (~$200 una tantum).
 
 ## Layout file
 

@@ -42,8 +42,11 @@ export default function Markers({ map }: Props) {
         type: 'geojson',
         data: geojson,
         cluster: true,
-        clusterRadius: 28, // px: aggrega marker entro 28 px → desovrappone i duplicati
-        clusterMaxZoom: 17, // a zoom > 17 ogni terrazza è separata
+        // Cluster meno aggressivi: prima erano 28px/zoom17, ora 16px/zoom14
+        // → l'utente vede i singoli locali a zoom più ampio, senza dover
+        // bucare la stessa bolla 3-4 volte. Solo veri overlap vengono ridotti.
+        clusterRadius: 16,
+        clusterMaxZoom: 14,
         clusterProperties: {
           // conta quante sono al sole in ogni cluster (utile per colorarlo)
           sunny: ['+', ['case', ['==', ['get', 'status'], 'sun'], 1, 0]],
@@ -120,16 +123,22 @@ export default function Markers({ map }: Props) {
         const id = (f.properties as { id: string }).id;
         useStore.getState().setSelectedId(id);
       });
-      // Click cluster → zoom in
+      // Click cluster → zoom in "deciso": almeno +2 livelli dal corrente, per
+      // spaccare subito il gruppo e mostrare i singoli locali in un solo click
+      // (era +0.5: spesso non bastava e l'utente doveva cliccare la stessa bolla
+      // 3-4 volte).
       map.on('click', clusterLayerId, (e: MapMouseEvent) => {
         const f = map.queryRenderedFeatures(e.point, { layers: [clusterLayerId] })[0];
         if (!f) return;
         const clusterId = (f.properties as { cluster_id?: number }).cluster_id;
         const src = map.getSource(sourceId) as GeoJSONSource;
         if (clusterId == null) return;
-        src.getClusterExpansionZoom(clusterId).then((zoom) => {
+        src.getClusterExpansionZoom(clusterId).then((expansionZoom) => {
           const coords = (f.geometry as { coordinates: [number, number] }).coordinates;
-          map.easeTo({ center: coords, zoom: Math.min(zoom + 0.5, 18), duration: 400 });
+          const currentZoom = map.getZoom();
+          // Almeno +2 dal corrente, oltre l'expansion zoom, capped a 19.
+          const target = Math.min(Math.max(expansionZoom + 0.5, currentZoom + 2), 19);
+          map.easeTo({ center: coords, zoom: target, duration: 450 });
         }).catch(() => undefined);
       });
       // Cursori

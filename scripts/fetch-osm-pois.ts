@@ -2,7 +2,17 @@ import { writeFile, mkdir } from 'node:fs/promises';
 import { fetchWithRetry } from './lib/http.js';
 
 const OVERPASS = 'https://overpass-api.de/api/interpreter';
-const BBOX = '41.32,2.07,41.47,2.23'; // Barcellona generosa, coerente con fetch-buildings
+
+const CITY_BBOX: Record<string, { bbox: string; label: string }> = {
+  bcn: { bbox: '41.32,2.07,41.47,2.23', label: 'Barcellona' },
+  mad: { bbox: '40.36,-3.80,40.52,-3.55', label: 'Madrid' },
+};
+const CITY = (process.env.CITY ?? 'bcn').toLowerCase();
+const cityConf = CITY_BBOX[CITY];
+if (!cityConf) {
+  throw new Error(`CITY ignota: '${CITY}'. Valori validi: ${Object.keys(CITY_BBOX).join(', ')}`);
+}
+const BBOX = cityConf.bbox;
 
 // Amenity gastronomiche con `name` settato. Includiamo anche shop=bakery
 // e shop=coffee perché spesso hanno tavolini fuori.
@@ -20,7 +30,7 @@ out center tags;
 `.trim();
 
 const OUT_DIR = 'data-raw';
-const OUT_FILE = `${OUT_DIR}/osm-pois.raw.json`;
+const OUT_FILE = `${OUT_DIR}/osm-pois-${CITY}.raw.json`;
 
 export type RawPoi = {
   id: string;
@@ -59,7 +69,7 @@ function elementToPoi(el: OverpassElement): RawPoi | null {
 }
 
 async function main(): Promise<void> {
-  console.log('Overpass: query POI commerciali Barcellona…');
+  console.log(`Overpass: query POI commerciali ${cityConf.label}…`);
   const url = `${OVERPASS}?data=${encodeURIComponent(QUERY)}`;
   const res = await fetchWithRetry(url, {
     retries: 3,

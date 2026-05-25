@@ -12,18 +12,19 @@ import Onboarding from './components/Onboarding.js';
 import UpdatePrompt from './components/UpdatePrompt.js';
 import TomorrowBanner from './components/TomorrowBanner.js';
 import SheetFab from './components/SheetFab.js';
+import CityPicker from './components/CityPicker.js';
 import { useGeolocation } from './lib/use-geolocation.js';
 import { useUrlSync } from './lib/use-url-sync.js';
 import { useStore } from './store/use-store.js';
-import { loadTerraces, loadMeta, loadBuildingChunk, cellsForBbox } from './lib/data-loader.js';
+import {
+  loadTerraces, loadMeta, loadBuildingChunk, cellsForBbox,
+  loadCitiesIndex, clearBuildingCache,
+} from './lib/data-loader.js';
 import { buildBuildingIndex } from './lib/building-index.js';
 import { computeAllStates } from './lib/compute-states.js';
 import { fetchWeather } from './lib/weather.js';
 import { t } from './i18n/i18n.js';
 import type { Building } from './types/index.js';
-
-const BCN_CENTER_LAT = 41.39;
-const BCN_CENTER_LNG = 2.165;
 
 type IdleWindow = Window & typeof globalThis & {
   requestIdleCallback?: (cb: () => void, opts?: { timeout?: number }) => number;
@@ -40,29 +41,72 @@ export default function App() {
   const setBuildingIndex = useStore((s) => s.setBuildingIndex);
   const setWeather = useStore((s) => s.setWeather);
   const setNow = useStore((s) => s.setNow);
+  const setCities = useStore((s) => s.setCities);
+  const setCurrentCity = useStore((s) => s.setCurrentCity);
   const now = useStore((s) => s.now);
   const states = useStore((s) => s.states);
   const terraces = useStore((s) => s.terraces);
   const buildingIndex = useStore((s) => s.buildingIndex);
   const weather = useStore((s) => s.weather);
+  const currentCity = useStore((s) => s.currentCity);
+  const cities = useStore((s) => s.cities);
+  const cityConf = cities[currentCity];
 
-  // 1) Geolocalizzazione → centra mappa (solo se l'utente è dentro BCN)
+  // 0) Carica indice città disponibili (cities.json) UNA VOLTA
   useEffect(() => {
-    if (geo.status === 'ok' && map) {
+    let cancelled = false;
+    loadCitiesIndex()
+      .then((c) => {
+        if (cancelled) return;
+        setCities(c);
+        // Se la città salvata non esiste più nell'indice, fallback alla prima
+        if (!c[currentCity]) {
+          const first = Object.keys(c)[0];
+          if (first) setCurrentCity(first);
+        }
+      })
+      .catch((err) => console.error('Impossibile caricare cities.json', err));
+    return () => { cancelled = true; };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // 1) Geolocalizzazione → centra mappa SE l'utente è dentro la città corrente
+  useEffect(() => {
+    if (geo.status === 'ok' && map && cityConf) {
       setUserPos({ lat: geo.lat, lng: geo.lng });
-      if (geo.lng > 2.0 && geo.lng < 2.3 && geo.lat > 41.3 && geo.lat < 41.5) {
+      const [lngMin, latMin, lngMax, latMax] = cityConf.bbox;
+      if (geo.lng > lngMin && geo.lng < lngMax && geo.lat > latMin && geo.lat < latMax) {
         map.flyTo({ center: [geo.lng, geo.lat], zoom: 15, duration: 800 });
       }
     }
-  }, [geo, map, setUserPos]);
+  }, [geo, map, setUserPos, cityConf]);
 
-  // 2) Carica terrazze + chunk edifici UNA VOLTA quando la mappa è pronta.
-  //    Separato dal ricalcolo states per evitare reload completo a ogni cambio `now`.
+  // 2) Centra la mappa sul centro della città corrente al primo load
+  //    (o al cambio città manuale dal CityPicker).
   useEffect(() => {
-    if (!map) return;
+    if (!map || !cityConf) return;
+    map.flyTo({
+      center: [cityConf.center.lng, cityConf.center.lat],
+      zoom: cityConf.center.zoom,
+      duration: 600,
+    });
+  }, [map, cityConf]);
+
+  // 3) Carica terrazze + chunk edifici della città corrente. Re-fetch al cambio.
+  useEffect(() => {
+    if (!map || !cityConf) return;
     let cancelled = false;
     const load = async () => {
-      const [list, meta] = await Promise.all([loadTerraces(), loadMeta()]);
+      // Reset stato precedente (terrazze dell'altra città non più valide)
+      setTerraces([]);
+      setStates({});
+      setBuildingIndex(null);
+      setSelectedId(null);
+      clearBuildingCache();
+
+      const [list, meta] = await Promise.all([
+        loadTerraces(currentCity),
+        loadMeta(currentCity),
+      ]);
       if (cancelled) return;
       setTerraces(list);
       const b = map.getBounds();
@@ -71,18 +115,16 @@ export default function App() {
         meta.gridStep,
         300,
       );
-      const chunks = await Promise.all(cells.map((k) => loadBuildingChunk(k)));
+      const chunks = await Promise.all(cells.map((k) => loadBuildingChunk(currentCity, k)));
       const allBuildings: Building[] = chunks.flat();
       if (cancelled) return;
       setBuildingIndex(buildBuildingIndex(allBuildings));
     };
-    load();
+    load().catch((err) => console.error(`Errore caricamento dati ${currentCity}`, err));
     return () => { cancelled = true; };
-  }, [map, setTerraces, setBuildingIndex]);
+  }, [map, currentCity, cityConf, setTerraces, setStates, setBuildingIndex, setSelectedId]);
 
-  // 3) Ricomputa states quando cambia now / terraces / buildingIndex / weather.
-  //    Veloce: solo raycasting su dati già caricati. requestIdleCallback per non
-  //    bloccare il main thread durante interazioni rapide (es. drag dello slider).
+  // 4) Ricomputa states quando cambia now / terraces / buildingIndex / weather.
   useEffect(() => {
     if (!terraces.length || !buildingIndex) return;
     let cancelled = false;
@@ -106,20 +148,20 @@ export default function App() {
     };
   }, [now, terraces, buildingIndex, weather, setStates]);
 
-  // 4) Fetch meteo da Open-Meteo al mount + ogni 30 min (cache localStorage 1h).
+  // 5) Fetch meteo (centro della città corrente) al mount + ogni 30 min
   useEffect(() => {
+    if (!cityConf) return;
     let cancelled = false;
     const tick = async () => {
-      const w = await fetchWeather(BCN_CENTER_LAT, BCN_CENTER_LNG, 7);
+      const w = await fetchWeather(cityConf.center.lat, cityConf.center.lng, 7);
       if (!cancelled) setWeather(w);
     };
     tick();
     const id = window.setInterval(tick, 30 * 60_000);
     return () => { cancelled = true; window.clearInterval(id); };
-  }, [setWeather]);
+  }, [setWeather, cityConf]);
 
-  // 5) Refresh automatico di `now` se l'utente non l'ha modificato manualmente.
-  //    Considera "non modificato" se è entro 1 minuto da Date.now().
+  // 6) Refresh automatico di `now` se l'utente non l'ha modificato manualmente.
   useEffect(() => {
     const id = window.setInterval(() => {
       const drift = Math.abs(Date.now() - useStore.getState().now.getTime());
@@ -131,24 +173,21 @@ export default function App() {
   const sunnyCount = Object.values(states).filter((s) => s === 'sun').length;
   const userPos = useStore((s) => s.userPos);
   const selectedId = useStore((s) => s.selectedId);
-  // Stato drawer mobile (su desktop >=1024px la sidebar è sempre visibile via CSS)
   const [sheetOpen, setSheetOpen] = useState(false);
 
-  const outsideBcn =
-    geo.status === 'ok' &&
-    (geo.lng < 2.0 || geo.lng > 2.3 || geo.lat < 41.3 || geo.lat > 41.5);
+  const cityName = cityConf?.name ?? '';
+  const outsideCity = cityConf && geo.status === 'ok' && (() => {
+    const [lngMin, latMin, lngMax, latMax] = cityConf.bbox;
+    return geo.lng < lngMin || geo.lng > lngMax || geo.lat < latMin || geo.lat > latMax;
+  })();
 
-  // Etichetta sheet contestuale: con posizione → "cerca de ti", senza → "en Barcelona"
   const sheetLabel = userPos
     ? t('sunnyNearby', { count: sunnyCount })
-    : t('sunnyInCity', { count: sunnyCount });
+    : t('sunnyInCity', { count: sunnyCount, city: cityName });
 
-  // Banner edge: nascosti se la card è aperta (per non distrarre) o se la posizione
-  // è ormai disponibile (lo stato 'denied' può persistere se l'utente attiva via CTA).
   const showGeoDeniedBanner = geo.status === 'denied' && !userPos && !selectedId;
-  const showOutsideBcnBanner = outsideBcn && !selectedId;
+  const showOutsideCityBanner = outsideCity && !selectedId;
 
-  // Selezione terrazza dalla lista → chiudo il drawer per non sovrapporre alla card
   const onSelectFromList = (id: string) => {
     setSelectedId(id);
     setSheetOpen(false);
@@ -158,12 +197,13 @@ export default function App() {
     <div className="app-root">
       <MapView onMapReady={setMap} />
       {map && <Markers map={map} />}
+      <CityPicker />
       <TimeSlider />
       {showGeoDeniedBanner && (
         <div className="edge-banner" role="status">{t('geoDenied')}</div>
       )}
-      {showOutsideBcnBanner && (
-        <div className="edge-banner" role="status">{t('outsideBcn')}</div>
+      {showOutsideCityBanner && (
+        <div className="edge-banner" role="status">{t('outsideCity', { city: cityName })}</div>
       )}
       <BottomSheet
         collapsedLabel={sheetLabel}

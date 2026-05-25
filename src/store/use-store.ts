@@ -2,10 +2,23 @@ import { create } from 'zustand';
 import type { Terrace } from '../types/index.js';
 import type { BuildingIndex } from '../lib/building-index.js';
 import type { Weather } from '../lib/weather.js';
+import type { CityCode, CityConfig } from '../lib/data-loader.js';
 
 export type TerraceStatus = 'sun' | 'shade' | 'closed' | 'pending' | 'cloudy';
 
+const LS_CITY = 'mts.currentCity';
+const DEFAULT_CITY: CityCode = 'bcn';
+
+function readSavedCity(): CityCode {
+  if (typeof localStorage === 'undefined') return DEFAULT_CITY;
+  try { return localStorage.getItem(LS_CITY) || DEFAULT_CITY; } catch { return DEFAULT_CITY; }
+}
+
 type State = {
+  currentCity: CityCode;
+  setCurrentCity: (c: CityCode) => void;
+  cities: Record<string, CityConfig>;
+  setCities: (c: Record<string, CityConfig>) => void;
   now: Date;
   setNow: (d: Date) => void;
   userPos: { lat: number; lng: number } | null;
@@ -32,6 +45,15 @@ type State = {
 };
 
 export const useStore = create<State>((set) => ({
+  currentCity: readSavedCity(),
+  setCurrentCity: (currentCity) => {
+    if (typeof localStorage !== 'undefined') {
+      try { localStorage.setItem(LS_CITY, currentCity); } catch { /* ignore */ }
+    }
+    set({ currentCity });
+  },
+  cities: {},
+  setCities: (cities) => set({ cities }),
   now: new Date(),
   setNow: (now) => set({ now }),
   userPos: null,

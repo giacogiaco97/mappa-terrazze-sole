@@ -3,8 +3,9 @@ import { resolveHeight } from './lib/resolve-height.js';
 import type { Building } from '../src/types/index.js';
 import type { RawBuilding } from './lib/parse-buildings.js';
 
-const IN_FILE = 'data-raw/buildings.raw.json';
-const OUT_FILE = 'data-raw/buildings.resolved.json';
+const CITY = (process.env.CITY ?? 'bcn').toLowerCase();
+const IN_FILE = `data-raw/buildings-${CITY}.raw.json`;
+const OUT_FILE = `data-raw/buildings-${CITY}.resolved.json`;
 
 async function main(): Promise<void> {
   const raw = JSON.parse(await readFile(IN_FILE, 'utf-8')) as { buildings: RawBuilding[] };

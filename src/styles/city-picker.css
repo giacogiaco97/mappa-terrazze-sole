@@ -1,0 +1,63 @@
+/* === City Picker: pillola top-left per cambiare città === */
+.city-picker {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + 12px);
+  left: 12px;
+  z-index: 6;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px 6px 12px;
+  background: var(--bg-elev);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+  min-height: 36px;
+}
+.city-picker:hover { background: var(--bg-input); }
+.city-picker:focus-within {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+.city-picker__icon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.city-picker__select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background: transparent;
+  border: 0;
+  font: inherit;
+  color: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  padding-right: 4px;
+  /* hide default arrow */
+  background-image: none;
+}
+.city-picker__select:focus { outline: none; }
+
+.city-picker__chevron {
+  font-size: 10px;
+  line-height: 1;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+/* Su desktop ≥1024px sta dentro la sidebar (header), in alto */
+@media (min-width: 1024px) {
+  .city-picker {
+    top: 12px;
+    left: 12px;
+    /* La sidebar è 380px a sinistra, posiziono il picker DENTRO la sidebar */
+    z-index: 5;
+  }
+}

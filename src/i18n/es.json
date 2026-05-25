@@ -1,8 +1,10 @@
 {
   "appName": "Terrazas al sol",
   "sunnyNearby": "{count} terrazas al sol cerca de ti",
-  "sunnyInCity": "{count} terrazas al sol en Barcelona",
+  "sunnyInCity": "{count} terrazas al sol en {city}",
   "listEmptyResetHint": "Limpiar filtros",
+  "cityPickerLabel": "Elige la ciudad",
+  "outsideCity": "Por ahora solo cubrimos {city}",
   "openInGoogleMaps": "Abrir en Google Maps",
   "sunnyUntil": "Al sol hasta las {time}",
   "tables": "{n} mesas",

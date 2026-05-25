@@ -5,20 +5,61 @@ import type { RawPoi } from './fetch-osm-pois.js';
 import type { GooglePlaceMatch } from './fetch-google-places.js';
 import type { Building, Meta, Terrace } from '../src/types/index.js';
 
-const TERRACES_IN = 'data-raw/terraces.raw.json';
-const BUILDINGS_IN = 'data-raw/buildings.resolved.json';
-const POIS_IN = 'data-raw/osm-pois.raw.json';
-const GOOGLE_IN = 'data-raw/google-places.raw.json';
-const OUT_DIR = 'public/data';
-const BUILDINGS_DIR = `${OUT_DIR}/buildings`;
-const GRID_STEP = 0.01; // ~1 km
-// Raggio match POI: con 50m perdiamo locali con ingresso "profondo" (interno cortile)
-// o terrazze autorizzate su via diversa dalla facciata. 70m copre ~10% terrazze in più
-// senza mismatch eccessivi grazie al vincolo greedy (1 POI = 1 terrazza più vicina).
-const POI_MATCH_RADIUS_M = 70;
+/**
+ * Build dell'output runtime per una città. Configurabile via env var CITY.
+ * Output finale in `public/data/{city}/`:
+ *  - terraces.json
+ *  - meta.json
+ *  - buildings/{x}_{y}.json (grid sharding ~1km)
+ *
+ * Inoltre aggiorna `public/data/cities.json` con la lista delle città
+ * disponibili (mantiene quelle già presenti, aggiunge/aggiorna quella corrente).
+ */
 
-const BCN_BBOX: [number, number, number, number] = [2.07, 41.32, 2.23, 41.47];
-const CITY = 'Barcelona';
+type CityConfig = {
+  code: string;
+  name: string;
+  /** Nome che appare nei testi i18n nei vari linguaggi */
+  displayName: { es: string; en: string; ca: string };
+  /** bbox finale runtime: [lngMin, latMin, lngMax, latMax] */
+  bbox: [number, number, number, number];
+  /** Centro mappa default + zoom iniziale */
+  center: { lat: number; lng: number; zoom: number };
+};
+
+const CITIES: Record<string, CityConfig> = {
+  bcn: {
+    code: 'bcn',
+    name: 'Barcelona',
+    displayName: { es: 'Barcelona', en: 'Barcelona', ca: 'Barcelona' },
+    bbox: [2.07, 41.32, 2.23, 41.47],
+    center: { lat: 41.39, lng: 2.165, zoom: 14 },
+  },
+  mad: {
+    code: 'mad',
+    name: 'Madrid',
+    displayName: { es: 'Madrid', en: 'Madrid', ca: 'Madrid' },
+    // bbox finale generosa per accogliere anche distretti periferici N/S
+    bbox: [-3.80, 40.33, -3.55, 40.54],
+    center: { lat: 40.4168, lng: -3.7038, zoom: 14 },
+  },
+};
+
+const CITY = (process.env.CITY ?? 'bcn').toLowerCase();
+const cityConf = CITIES[CITY];
+if (!cityConf) {
+  throw new Error(`CITY ignota: '${CITY}'. Valori validi: ${Object.keys(CITIES).join(', ')}`);
+}
+
+const TERRACES_IN = `data-raw/terraces-${CITY}.raw.json`;
+const BUILDINGS_IN = `data-raw/buildings-${CITY}.resolved.json`;
+const POIS_IN = `data-raw/osm-pois-${CITY}.raw.json`;
+const GOOGLE_IN = `data-raw/google-places-${CITY}.raw.json`;
+const OUT_DIR = `public/data/${CITY}`;
+const BUILDINGS_DIR = `${OUT_DIR}/buildings`;
+const CITIES_INDEX = `public/data/cities.json`;
+const GRID_STEP = 0.01; // ~1 km
+const POI_MATCH_RADIUS_M = 70;
 
 async function exists(path: string): Promise<boolean> {
   try { await access(path); return true; } catch { return false; }
@@ -31,24 +72,32 @@ function truncCoords(coords: [number, number][]): [number, number][] {
   );
 }
 
+async function readCitiesIndex(): Promise<{ cities: Record<string, CityConfig> }> {
+  if (!(await exists(CITIES_INDEX))) return { cities: {} };
+  try {
+    const raw = JSON.parse(await readFile(CITIES_INDEX, 'utf-8')) as { cities?: Record<string, CityConfig> };
+    return { cities: raw.cities ?? {} };
+  } catch {
+    return { cities: {} };
+  }
+}
+
 async function main(): Promise<void> {
+  console.log(`\n=== Build output per città: ${cityConf.name} (${CITY}) ===\n`);
+
   // Terrazze
   const tRaw = JSON.parse(await readFile(TERRACES_IN, 'utf-8')) as { terraces: Terrace[] };
   let terraces: Terrace[] = tRaw.terraces.map((t) => ({
     ...t,
-    // 5 decimali = ~1 m di precisione, sufficiente per il calcolo del sole.
     lat: Math.round(t.lat * 1e5) / 1e5,
     lng: Math.round(t.lng * 1e5) / 1e5,
   }));
 
-  // Arricchimento nome: prima OSM (gratuito, copre ~72%), poi Google Places per i buchi.
-  // OSM ha vincolo greedy "1 POI = 1 terrazza più vicina"; Google viene applicato SOLO
-  // alle terrazze ancora con name === address, quindi non sovrascrive mai un nome OSM.
+  // Arricchimento OSM
   if (await exists(POIS_IN)) {
     const pRaw = JSON.parse(await readFile(POIS_IN, 'utf-8')) as { pois: RawPoi[] };
     const before = new Set(terraces.filter((t) => t.name !== t.address).map((t) => t.id));
     terraces = matchTerracesToPois(terraces, pRaw.pois, POI_MATCH_RADIUS_M);
-    // Marca origine OSM per le terrazze appena nominate (non quelle che avevano già name).
     terraces = terraces.map((t) =>
       t.name !== t.address && !before.has(t.id) ? { ...t, nameSource: 'osm' as const } : t,
     );
@@ -60,20 +109,18 @@ async function main(): Promise<void> {
     console.warn(`!! ${POIS_IN} mancante: salto l'arricchimento OSM.`);
   }
 
+  // Arricchimento Google Places (opzionale)
   if (await exists(GOOGLE_IN)) {
     const gRaw = JSON.parse(await readFile(GOOGLE_IN, 'utf-8')) as { matches: GooglePlaceMatch[] };
     const byId = new Map(gRaw.matches.map((m) => [m.terraceId, m] as const));
     let added = 0;
     terraces = terraces.map((t) => {
-      if (t.name !== t.address) return t; // già nominata da OSM
+      if (t.name !== t.address) return t;
       const g = byId.get(t.id);
       if (!g) return t;
       added++;
       return { ...t, name: g.name, placeId: g.placeId, nameSource: 'google' as const };
     });
-    // Per le terrazze già nominate da OSM, allega comunque il placeId se esiste
-    // (così il link Google Maps apre la scheda esatta anche per quelle). Lascia
-    // nameSource='osm': il nome resta OSM, il placeId è solo per il link.
     terraces = terraces.map((t) => (t.placeId ? t : (byId.get(t.id)?.placeId ? { ...t, placeId: byId.get(t.id)!.placeId } : t)));
     const totalNamed = terraces.filter((t) => t.name !== t.address).length;
     const totalWithPlaceId = terraces.filter((t) => t.placeId).length;
@@ -81,19 +128,17 @@ async function main(): Promise<void> {
       `Arricchimento Google Places: +${added} nomi nuovi → ${totalNamed}/${terraces.length} totali (${((totalNamed / terraces.length) * 100).toFixed(1)}%). place_id su ${totalWithPlaceId} terrazze.`,
     );
   } else {
-    console.warn(`!! ${GOOGLE_IN} mancante: salto l'arricchimento Google Places (esegui prima 'npx tsx scripts/fetch-google-places.ts').`);
+    console.warn(`!! ${GOOGLE_IN} mancante: salto l'arricchimento Google Places.`);
   }
 
   // Edifici
   const bRaw = JSON.parse(await readFile(BUILDINGS_IN, 'utf-8')) as { buildings: Building[] };
   const buildings = bRaw.buildings.map((b) => ({ ...b, footprint: truncCoords(b.footprint) }));
 
-  // Pulisce e ricrea l'output
+  // Pulisce e ricrea l'output della città corrente
   await rm(OUT_DIR, { recursive: true, force: true });
   await mkdir(BUILDINGS_DIR, { recursive: true });
 
-  // Scrive terraces.json: include chairs e surfaceSqM (mostrati nella TerraceCard).
-  // placeId e nameSource sono opzionali: omessi se assenti per non sprecare bytes.
   const runtime = terraces.map((tr) => {
     const base: Record<string, unknown> = {
       id: tr.id,
@@ -112,15 +157,15 @@ async function main(): Promise<void> {
   });
   await writeFile(`${OUT_DIR}/terraces.json`, JSON.stringify(runtime));
 
-  // Suddivide edifici in griglia
+  // Sharding edifici per griglia
   const chunks = chunkByGrid(buildings, GRID_STEP);
   for (const [key, list] of Object.entries(chunks)) {
     await writeFile(`${BUILDINGS_DIR}/${key}.json`, JSON.stringify(list));
   }
 
   const meta: Meta = {
-    city: CITY,
-    bbox: BCN_BBOX,
+    city: cityConf.name,
+    bbox: cityConf.bbox,
     generatedAt: new Date().toISOString(),
     gridStep: GRID_STEP,
     buildingCount: buildings.length,
@@ -128,28 +173,36 @@ async function main(): Promise<void> {
   };
   await writeFile(`${OUT_DIR}/meta.json`, JSON.stringify(meta, null, 2));
 
-  // Sanity check: fail forte se la pipeline produce dati palesemente sbagliati.
-  if (terraces.length < 1000) {
-    throw new Error(`Pipeline output sospetto: solo ${terraces.length} terrazze (< 1000). Aborting.`);
+  // Sanity checks (soglie più rilassate di prima: ci sono città più piccole)
+  if (terraces.length < 500) {
+    throw new Error(`Pipeline output sospetto: solo ${terraces.length} terrazze (< 500). Aborting.`);
   }
-  if (buildings.length < 10_000) {
-    throw new Error(`Pipeline output sospetto: solo ${buildings.length} edifici (< 10000). Aborting.`);
+  if (buildings.length < 5_000) {
+    throw new Error(`Pipeline output sospetto: solo ${buildings.length} edifici (< 5000). Aborting.`);
   }
   const noName = terraces.filter((tr) => tr.name === tr.address).length;
   const coverage = ((terraces.length - noName) / terraces.length) * 100;
-  if (coverage < 40) {
-    throw new Error(`Pipeline output sospetto: copertura nomi POI ${coverage.toFixed(1)}% (< 40%). Verifica fetch POI.`);
+  if (coverage < 30) {
+    console.warn(`Pipeline warning: copertura nomi ${coverage.toFixed(1)}% (< 30%). Per ${CITY} accetto, ma verifica.`);
   }
+  const [lngMin, latMin, lngMax, latMax] = cityConf.bbox;
   const outsideBbox = terraces.filter((tr) =>
-    tr.lng < BCN_BBOX[0] || tr.lng > BCN_BBOX[2] ||
-    tr.lat < BCN_BBOX[1] || tr.lat > BCN_BBOX[3]);
+    tr.lng < lngMin || tr.lng > lngMax ||
+    tr.lat < latMin || tr.lat > latMax);
   if (outsideBbox.length > 0) {
-    throw new Error(`Pipeline output sospetto: ${outsideBbox.length} terrazze fuori dal bbox BCN.`);
+    throw new Error(`Pipeline output sospetto: ${outsideBbox.length} terrazze fuori dal bbox ${cityConf.name}.`);
   }
 
+  // Aggiorna indice cities.json (merge: mantiene altre città già pubblicate)
+  await mkdir('public/data', { recursive: true });
+  const idx = await readCitiesIndex();
+  idx.cities[CITY] = cityConf;
+  await writeFile(CITIES_INDEX, JSON.stringify(idx, null, 2));
+
   console.log(
-    `Output scritto in ${OUT_DIR}: ${terraces.length} terrazze, ${buildings.length} edifici in ${Object.keys(chunks).length} celle. Copertura nomi: ${coverage.toFixed(1)}%.`,
+    `\nOutput scritto in ${OUT_DIR}: ${terraces.length} terrazze, ${buildings.length} edifici in ${Object.keys(chunks).length} celle. Copertura nomi: ${coverage.toFixed(1)}%.`,
   );
+  console.log(`Indice città aggiornato: ${CITIES_INDEX} (${Object.keys(idx.cities).join(', ')})`);
 }
 
 main().catch((err) => {

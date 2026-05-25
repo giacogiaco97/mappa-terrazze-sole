@@ -1,0 +1,44 @@
+{
+  "cities": {
+    "bcn": {
+      "code": "bcn",
+      "name": "Barcelona",
+      "displayName": {
+        "es": "Barcelona",
+        "en": "Barcelona",
+        "ca": "Barcelona"
+      },
+      "bbox": [
+        2.07,
+        41.32,
+        2.23,
+        41.47
+      ],
+      "center": {
+        "lat": 41.39,
+        "lng": 2.165,
+        "zoom": 14
+      }
+    },
+    "mad": {
+      "code": "mad",
+      "name": "Madrid",
+      "displayName": {
+        "es": "Madrid",
+        "en": "Madrid",
+        "ca": "Madrid"
+      },
+      "bbox": [
+        -3.8,
+        40.33,
+        -3.55,
+        40.54
+      ],
+      "center": {
+        "lat": 40.4168,
+        "lng": -3.7038,
+        "zoom": 14
+      }
+    }
+  }
+}

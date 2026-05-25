@@ -3,7 +3,19 @@ import { fetchWithRetry } from './lib/http.js';
 import { parseOverpassBuildings } from './lib/parse-buildings.js';
 
 const OVERPASS = 'https://overpass-api.de/api/interpreter';
-const BBOX = '41.32,2.07,41.47,2.23'; // Barcellona generosa
+
+// Bbox per città. Selezionato via env var CITY=bcn|mad (default: bcn).
+const CITY_BBOX: Record<string, { bbox: string; label: string }> = {
+  bcn: { bbox: '41.32,2.07,41.47,2.23', label: 'Barcellona' },
+  mad: { bbox: '40.36,-3.80,40.52,-3.55', label: 'Madrid (centro + barrios principali)' },
+};
+
+const CITY = (process.env.CITY ?? 'bcn').toLowerCase();
+const cityConf = CITY_BBOX[CITY];
+if (!cityConf) {
+  throw new Error(`CITY ignota: '${CITY}'. Valori validi: ${Object.keys(CITY_BBOX).join(', ')}`);
+}
+const BBOX = cityConf.bbox;
 const QUERY = `
 [out:json][timeout:300];
 way["building"](${BBOX});
@@ -11,10 +23,10 @@ out body geom tags;
 `.trim();
 
 const OUT_DIR = 'data-raw';
-const OUT_FILE = `${OUT_DIR}/buildings.raw.json`;
+const OUT_FILE = `${OUT_DIR}/buildings-${CITY}.raw.json`;
 
 async function main(): Promise<void> {
-  console.log('Overpass: query edifici Barcellona…');
+  console.log(`Overpass: query edifici ${cityConf.label}…`);
   const url = `${OVERPASS}?data=${encodeURIComponent(QUERY)}`;
   const res = await fetchWithRetry(url, {
     retries: 3,

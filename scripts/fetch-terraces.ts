@@ -5,7 +5,7 @@ import { parseTerracesCsv } from './lib/parse-terraces.js';
 const CKAN =
   'https://opendata-ajuntament.barcelona.cat/data/api/3/action/package_show?id=terrasses-comercos-vigents';
 const OUT_DIR = 'data-raw';
-const OUT_FILE = `${OUT_DIR}/terraces.raw.json`;
+const OUT_FILE = `${OUT_DIR}/terraces-bcn.raw.json`;
 
 type CkanResource = { format: string; url: string; last_modified: string };
 

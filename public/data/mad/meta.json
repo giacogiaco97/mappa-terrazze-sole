@@ -1,0 +1,13 @@
+{
+  "city": "Madrid",
+  "bbox": [
+    -3.8,
+    40.33,
+    -3.55,
+    40.54
+  ],
+  "generatedAt": "2026-05-25T09:33:43.924Z",
+  "gridStep": 0.01,
+  "buildingCount": 119671,
+  "terraceCount": 6397
+}

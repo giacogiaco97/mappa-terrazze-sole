@@ -38,9 +38,10 @@ const INCLUDED_TYPES = [
 ];
 const FIELD_MASK = 'places.id,places.displayName,places.location,places.types,places.formattedAddress';
 
-const TERRACES_IN = 'data-raw/terraces.raw.json';
-const POIS_IN = 'data-raw/osm-pois.raw.json';
-const OUT_FILE = 'data-raw/google-places.raw.json';
+const CITY = (process.env.CITY ?? 'bcn').toLowerCase();
+const TERRACES_IN = `data-raw/terraces-${CITY}.raw.json`;
+const POIS_IN = `data-raw/osm-pois-${CITY}.raw.json`;
+const OUT_FILE = `data-raw/google-places-${CITY}.raw.json`;
 
 export type GooglePlaceMatch = {
   terraceId: string;

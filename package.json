@@ -12,12 +12,15 @@
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "pipeline:terraces": "tsx scripts/fetch-terraces.ts",
+    "pipeline:terraces-mad": "tsx scripts/fetch-terraces-mad.ts",
     "pipeline:buildings": "tsx scripts/fetch-buildings.ts",
     "pipeline:heights": "tsx scripts/resolve-heights.ts",
     "pipeline:pois": "tsx scripts/fetch-osm-pois.ts",
     "pipeline:google": "tsx scripts/fetch-google-places.ts",
     "pipeline:build": "tsx scripts/build-output.ts",
-    "pipeline:run": "npm run pipeline:terraces && npm run pipeline:buildings && npm run pipeline:heights && npm run pipeline:pois && npm run pipeline:google && npm run pipeline:build"
+    "pipeline:bcn": "npm run pipeline:terraces && CITY=bcn npm run pipeline:buildings && CITY=bcn npm run pipeline:heights && CITY=bcn npm run pipeline:pois && CITY=bcn npm run pipeline:google && CITY=bcn npm run pipeline:build",
+    "pipeline:mad": "npm run pipeline:terraces-mad && CITY=mad npm run pipeline:buildings && CITY=mad npm run pipeline:heights && CITY=mad npm run pipeline:pois && CITY=mad npm run pipeline:google && CITY=mad npm run pipeline:build",
+    "pipeline:run": "npm run pipeline:bcn && npm run pipeline:mad"
   },
   "devDependencies": {
     "@playwright/test": "^1.60.0",

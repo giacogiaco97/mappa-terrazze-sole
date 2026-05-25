@@ -2,30 +2,53 @@ import type { Building, Meta, Terrace } from '../types/index.js';
 
 const BASE = `${import.meta.env.BASE_URL}data/`;
 
-export async function loadTerraces(): Promise<Terrace[]> {
-  const r = await fetch(`${BASE}terraces.json`);
-  if (!r.ok) throw new Error(`terraces.json HTTP ${r.status}`);
+export type CityCode = string;
+
+export type CityConfig = {
+  code: CityCode;
+  name: string;
+  displayName: { es: string; en: string; ca: string };
+  bbox: [number, number, number, number];
+  center: { lat: number; lng: number; zoom: number };
+};
+
+export async function loadCitiesIndex(): Promise<Record<string, CityConfig>> {
+  const r = await fetch(`${BASE}cities.json`);
+  if (!r.ok) throw new Error(`cities.json HTTP ${r.status}`);
+  const json = (await r.json()) as { cities: Record<string, CityConfig> };
+  return json.cities;
+}
+
+export async function loadTerraces(city: CityCode): Promise<Terrace[]> {
+  const r = await fetch(`${BASE}${city}/terraces.json`);
+  if (!r.ok) throw new Error(`terraces.json (${city}) HTTP ${r.status}`);
   return r.json() as Promise<Terrace[]>;
 }
 
-export async function loadMeta(): Promise<Meta> {
-  const r = await fetch(`${BASE}meta.json`);
-  if (!r.ok) throw new Error(`meta.json HTTP ${r.status}`);
+export async function loadMeta(city: CityCode): Promise<Meta> {
+  const r = await fetch(`${BASE}${city}/meta.json`);
+  if (!r.ok) throw new Error(`meta.json (${city}) HTTP ${r.status}`);
   return r.json() as Promise<Meta>;
 }
 
-// Cache in-memory dei chunk già scaricati.
+// Cache in-memory dei chunk già scaricati (chiave include city per evitare collisioni)
 const buildingCache = new Map<string, Promise<Building[]>>();
 
-export function loadBuildingChunk(key: string): Promise<Building[]> {
-  let p = buildingCache.get(key);
+export function loadBuildingChunk(city: CityCode, key: string): Promise<Building[]> {
+  const cacheKey = `${city}:${key}`;
+  let p = buildingCache.get(cacheKey);
   if (!p) {
-    p = fetch(`${BASE}buildings/${key}.json`)
+    p = fetch(`${BASE}${city}/buildings/${key}.json`)
       .then((r) => r.ok ? r.json() as Promise<Building[]> : [])
       .catch(() => []);
-    buildingCache.set(key, p);
+    buildingCache.set(cacheKey, p);
   }
   return p;
+}
+
+/** Svuota la cache (chiamare al cambio città per liberare memoria) */
+export function clearBuildingCache(): void {
+  buildingCache.clear();
 }
 
 export function cellsForBbox(

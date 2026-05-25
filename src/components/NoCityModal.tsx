@@ -47,11 +47,13 @@ export default function NoCityModal({ open, userLat, userLng, onClose }: Props) 
     onClose();
   };
 
-  // Web3Forms: free 250 form/mese, signup 30 secondi su web3forms.com,
-  // access_key associata server-side all'email destinatario (mai esposta).
-  // Configurazione: env var VITE_WEB3FORMS_KEY (build-time, Vercel dashboard).
-  // Se mancante, il form mostra un messaggio gentile invece di crashare.
-  const WEB3FORMS_KEY = (import.meta.env.VITE_WEB3FORMS_KEY as string | undefined) || '';
+  // Web3Forms: free 250 form/mese.
+  // La access_key è PUBBLICA per design (https://docs.web3forms.com/security):
+  // serve solo a identificare il form, l'email destinatario è associata
+  // server-side ad essa e MAI esposta nel bundle. Quindi committarla è OK.
+  // Override possibile via env var VITE_WEB3FORMS_KEY (per fork/dev).
+  const DEFAULT_KEY = '8a29a9a7-1b70-49a2-a220-e4eeef437a33';
+  const WEB3FORMS_KEY = (import.meta.env.VITE_WEB3FORMS_KEY as string | undefined) || DEFAULT_KEY;
   const WEB3FORMS_ENDPOINT = 'https://api.web3forms.com/submit';
 
   const onSubmit = async (e: React.FormEvent) => {

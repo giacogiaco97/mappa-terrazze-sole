@@ -24,6 +24,7 @@
   "requestFormSuccessTitle": "Gràcies!",
   "requestFormSuccessBody": "Hem rebut la teva petició. T'avisarem quan la teva ciutat estigui llesta.",
   "requestFormError": "No s'ha pogut enviar. Torna-ho a intentar.",
+  "requestFormNotConfigured": "El formulari encara no està configurat. Torna més tard.",
   "optional": "opcional",
   "back": "Tornar",
   "openInGoogleMaps": "Obrir a Google Maps",

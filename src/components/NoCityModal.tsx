@@ -47,10 +47,12 @@ export default function NoCityModal({ open, userLat, userLng, onClose }: Props) 
     onClose();
   };
 
-  // Email destinatario codificata in base64 → non leggibile a occhio nel bundle
-  // e non scrapeabile dai bot più semplici. FormSubmit la decodifica server-side.
-  // bWFzY2hlcmluMjc5N2dAZ21haWwuY29t = mascherin2797g@gmail.com
-  const FORMSUBMIT_ENDPOINT = 'https://formsubmit.co/ajax/bWFzY2hlcmluMjc5N2dAZ21haWwuY29t';
+  // Web3Forms: free 250 form/mese, signup 30 secondi su web3forms.com,
+  // access_key associata server-side all'email destinatario (mai esposta).
+  // Configurazione: env var VITE_WEB3FORMS_KEY (build-time, Vercel dashboard).
+  // Se mancante, il form mostra un messaggio gentile invece di crashare.
+  const WEB3FORMS_KEY = (import.meta.env.VITE_WEB3FORMS_KEY as string | undefined) || '';
+  const WEB3FORMS_ENDPOINT = 'https://api.web3forms.com/submit';
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,16 +62,21 @@ export default function NoCityModal({ open, userLat, userLng, onClose }: Props) 
       setSubmitState('success');
       return;
     }
+    if (!WEB3FORMS_KEY) {
+      setErrorMsg(t('requestFormNotConfigured'));
+      setSubmitState('error');
+      return;
+    }
     setSubmitState('submitting');
     setErrorMsg('');
     try {
-      const res = await fetch(FORMSUBMIT_ENDPOINT, {
+      const res = await fetch(WEB3FORMS_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify({
-          _subject: `[Terrazas al sol] Pedido nueva ciudad: ${city.trim()}`,
-          _captcha: 'false',
-          _template: 'table',
+          access_key: WEB3FORMS_KEY,
+          subject: `[Terrazas al sol] Pedido nueva ciudad: ${city.trim()}`,
+          from_name: 'Terrazas al sol',
           ciudad: city.trim(),
           email_contacto: email.trim() || '(non fornita)',
           mensaje: message.trim() || '(nessuno)',
@@ -77,10 +84,14 @@ export default function NoCityModal({ open, userLat, userLng, onClose }: Props) 
             ? `${userLat.toFixed(4)}, ${userLng.toFixed(4)}`
             : 'non condivisa',
           url: typeof window !== 'undefined' ? window.location.href : '',
+          // Web3Forms supporta reply_to: rispondi direttamente all'utente
+          replyto: email.trim() || undefined,
+          // Honeypot built-in di Web3Forms (nome del campo è "botcheck")
+          botcheck: '',
         }),
       });
-      if (!res.ok) {
-        const data = (await res.json().catch(() => ({}))) as { message?: string };
+      const data = (await res.json().catch(() => ({}))) as { success?: boolean; message?: string };
+      if (!res.ok || data.success === false) {
         setErrorMsg(data.message || `Error ${res.status}`);
         setSubmitState('error');
         return;

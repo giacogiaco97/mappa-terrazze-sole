@@ -24,6 +24,7 @@
   "requestFormSuccessTitle": "Thanks!",
   "requestFormSuccessBody": "We've received your request. We'll let you know when your city is ready.",
   "requestFormError": "Couldn't send. Please try again in a moment.",
+  "requestFormNotConfigured": "The form isn't configured yet. Please try later.",
   "optional": "optional",
   "back": "Back",
   "openInGoogleMaps": "Open in Google Maps",

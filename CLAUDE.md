@@ -2,7 +2,7 @@
 
 PWA mobile-first che mostra in tempo reale quali terrazze di Barcellona sono al sole.
 
-- **Città coperte:** Barcellona, Madrid (multi-città dal 2026-05-25)
+- **Città coperte:** Barcellona, Madrid, Sevilla (multi-città dal 2026-05-25)
 - **Stack:** Vite 8 + React 19 + TypeScript + MapLibre 5 + suncalc + RBush + Zustand + vite-plugin-pwa
 - **Hosting:** Vercel (primario) + GitHub Pages (fallback)
 - **URL live:** https://mappa-terrazze-sole.vercel.app
@@ -43,6 +43,12 @@ PWA mobile-first che mostra in tempo reale quali terrazze di Barcellona sono al 
   - **i18n contestuale**: `outsideBcn` → `outsideCity` con placeholder `{city}`. `sunnyInCity` con `{city}`. Nuovi `cityPickerLabel`. ES/EN/CA.
   - **Output**: 91/91 test (87 + 4 UTM). Bundle 1.27MB / 352KB gzip. +34MB dati Madrid (totale 63MB statici, ok per Vercel).
   - Google Places NON eseguito per Madrid (i nomi sono già 100% da dataset, serve solo per link Google Maps pixel-perfect). Lanciare manualmente con `CITY=mad npm run pipeline:google` (~$200 una tantum).
+- **Sevilla via OSM** (2026-05-25) — PR7 (`6cc6453`). Terza città. Sevilla NON ha dataset comunale aperto (ArcGIS Hub del Comune ha 38 dataset ma nessuno sulle terrazze) → uso OSM Overpass come fallback uniforme.
+  - **Dati**: 296 terrazze OSM (`amenity=bar/cafe/restaurant + outdoor_seating=yes`, bbox 37.34-37.43 / -6.05--5.92), 30490 edifici, 8.7MB output (più leggero perché meno entry).
+  - **Limite onesto**: copertura ~30-50% delle terrazze reali (solo quelle taggate `outdoor_seating=yes` su OSM). Per copertura completa servirebbe dataset comunale che il Comune di Sevilla non pubblica.
+  - **Nuovo `scripts/fetch-terraces-osm.ts`**: pipeline generica OSM-only configurabile per qualsiasi città senza dataset comunale (sev/val/ali via env CITY). Estrae name, addr:street/housenumber, capacity:outdoor, seats, con stime conservative (tables=chairs/4 se nessun dato).
+  - **build-output**: detect dataset OSM-only via `source.includes("OSM")` → skippa `matchTerracesToPois` (i nomi sono già autoritativi). Soglia min count abbassata 500→100. Address vuoto se OSM non ha addr:street.
+  - 91/91 test. Bundle invariato 1.27MB / 352KB gzip. Totale dati statici 72MB (29+34+8.7).
 
 ## Layout file
 

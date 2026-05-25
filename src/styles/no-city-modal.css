@@ -1,0 +1,146 @@
+/* === Modal "Non copriamo la tua zona" === */
+.no-city-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  z-index: 14;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: no-city-fade 180ms ease-out;
+}
+@keyframes no-city-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.no-city-modal {
+  position: relative;
+  max-width: 440px;
+  width: 100%;
+  background: var(--bg-elev);
+  color: var(--text);
+  border-radius: 20px;
+  padding: 28px 24px 24px;
+  box-shadow: var(--shadow-card), 0 12px 32px rgba(0, 0, 0, 0.25);
+  z-index: 15;
+  animation: no-city-rise 240ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  text-align: center;
+}
+@keyframes no-city-rise {
+  from { opacity: 0; transform: translateY(20px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.no-city-modal__close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  background: var(--bg-input);
+  border-radius: 50%;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-weight: 300;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.no-city-modal__close:hover { background: var(--border); }
+.no-city-modal__close:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+.no-city-modal__icon {
+  display: inline-block;
+  font-size: 48px;
+  line-height: 1;
+  margin-bottom: 10px;
+}
+
+.no-city-modal h3 {
+  margin: 0 0 8px;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.no-city-modal__intro {
+  margin: 0 0 18px;
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+.no-city-modal__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.no-city-modal__city {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  font: inherit;
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--text);
+  cursor: pointer;
+  min-height: 52px;
+  transition: background 120ms ease, border-color 120ms ease, transform 100ms ease;
+}
+.no-city-modal__city:hover {
+  background: var(--bg-elev);
+  border-color: var(--brand);
+}
+.no-city-modal__city:active { transform: scale(0.98); }
+.no-city-modal__city:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+.no-city-modal__city-name {
+  text-align: left;
+}
+.no-city-modal__city-arrow {
+  font-size: 18px;
+  color: var(--brand);
+  font-weight: 700;
+}
+
+.no-city-modal__request {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px 18px;
+  background: var(--brand);
+  color: var(--brand-text);
+  font-weight: 700;
+  font-size: 14px;
+  border-radius: 999px;
+  text-decoration: none;
+  min-height: 44px;
+  box-shadow: 0 2px 8px rgba(245, 166, 35, 0.32);
+}
+.no-city-modal__request:hover { filter: brightness(1.05); }
+.no-city-modal__request:active { transform: scale(0.97); }
+.no-city-modal__request:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 3px;
+}

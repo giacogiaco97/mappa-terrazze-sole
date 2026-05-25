@@ -13,6 +13,7 @@ import UpdatePrompt from './components/UpdatePrompt.js';
 import TomorrowBanner from './components/TomorrowBanner.js';
 import SheetFab from './components/SheetFab.js';
 import CityPicker from './components/CityPicker.js';
+import NoCityModal from './components/NoCityModal.js';
 import { useGeolocation } from './lib/use-geolocation.js';
 import { useUrlSync } from './lib/use-url-sync.js';
 import { useStore } from './store/use-store.js';
@@ -178,7 +179,7 @@ export default function App() {
   const cityName = cityConf?.name ?? '';
 
   // In quale città disponibile è la posizione utente? null = fuori da tutte.
-  const geoCityCode = geo.status === 'ok'
+  const geoCityCode = geo.status === 'ok' && Object.keys(cities).length > 0
     ? Object.values(cities).find((c) => {
         const [lngMin, latMin, lngMax, latMax] = c.bbox;
         return geo.lng > lngMin && geo.lng < lngMax && geo.lat > latMin && geo.lat < latMax;
@@ -191,10 +192,20 @@ export default function App() {
 
   const showGeoDeniedBanner = geo.status === 'denied' && !userPos && !selectedId;
   // L'utente è dentro una città disponibile DIVERSA da quella che sta vedendo
-  // → suggeriamo lo switch (al posto del vecchio "Por ahora solo cubrimos X"
-  // che era fuorviante in multi-città).
+  // → suggeriamo lo switch.
   const suggestCity = geoCityCode && geoCityCode !== currentCity ? cities[geoCityCode] : null;
   const showSwitchCityBanner = suggestCity && !selectedId && !sheetOpen;
+
+  // Modal "no data": geo OK + fuori da TUTTE le città + cities caricate.
+  // Lascia comunque all'utente la possibilità di chiuderla e usare l'app
+  // con la città scelta manualmente (default BCN o ultima salvata).
+  const [noCityDismissed, setNoCityDismissed] = useState(false);
+  const showNoCityModal =
+    geo.status === 'ok' &&
+    Object.keys(cities).length > 0 &&
+    geoCityCode === null &&
+    !noCityDismissed &&
+    !selectedId;
 
   const onSelectFromList = (id: string) => {
     setSelectedId(id);
@@ -240,6 +251,12 @@ export default function App() {
       <CreditsButton />
       <Onboarding />
       <UpdatePrompt />
+      <NoCityModal
+        open={showNoCityModal}
+        userLat={geo.status === 'ok' ? geo.lat : undefined}
+        userLng={geo.status === 'ok' ? geo.lng : undefined}
+        onClose={() => setNoCityDismissed(true)}
+      />
       {!selectedId && !sheetOpen && <TomorrowBanner />}
     </div>
   );

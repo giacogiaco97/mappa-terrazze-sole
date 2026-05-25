@@ -5,6 +5,8 @@
   "listEmptyResetHint": "Limpiar filtros",
   "cityPickerLabel": "Elige la ciudad",
   "outsideCity": "Por ahora solo cubrimos {city}",
+  "switchCityPrompt": "Estás en {city}",
+  "switchCityAction": "Ver {city}",
   "openInGoogleMaps": "Abrir en Google Maps",
   "sunnyUntil": "Al sol hasta las {time}",
   "tables": "{n} mesas",

@@ -176,17 +176,25 @@ export default function App() {
   const [sheetOpen, setSheetOpen] = useState(false);
 
   const cityName = cityConf?.name ?? '';
-  const outsideCity = cityConf && geo.status === 'ok' && (() => {
-    const [lngMin, latMin, lngMax, latMax] = cityConf.bbox;
-    return geo.lng < lngMin || geo.lng > lngMax || geo.lat < latMin || geo.lat > latMax;
-  })();
+
+  // In quale città disponibile è la posizione utente? null = fuori da tutte.
+  const geoCityCode = geo.status === 'ok'
+    ? Object.values(cities).find((c) => {
+        const [lngMin, latMin, lngMax, latMax] = c.bbox;
+        return geo.lng > lngMin && geo.lng < lngMax && geo.lat > latMin && geo.lat < latMax;
+      })?.code ?? null
+    : null;
 
   const sheetLabel = userPos
     ? t('sunnyNearby', { count: sunnyCount })
     : t('sunnyInCity', { count: sunnyCount, city: cityName });
 
   const showGeoDeniedBanner = geo.status === 'denied' && !userPos && !selectedId;
-  const showOutsideCityBanner = outsideCity && !selectedId;
+  // L'utente è dentro una città disponibile DIVERSA da quella che sta vedendo
+  // → suggeriamo lo switch (al posto del vecchio "Por ahora solo cubrimos X"
+  // che era fuorviante in multi-città).
+  const suggestCity = geoCityCode && geoCityCode !== currentCity ? cities[geoCityCode] : null;
+  const showSwitchCityBanner = suggestCity && !selectedId && !sheetOpen;
 
   const onSelectFromList = (id: string) => {
     setSelectedId(id);
@@ -201,8 +209,17 @@ export default function App() {
       {showGeoDeniedBanner && (
         <div className="edge-banner" role="status">{t('geoDenied')}</div>
       )}
-      {showOutsideCityBanner && (
-        <div className="edge-banner" role="status">{t('outsideCity', { city: cityName })}</div>
+      {showSwitchCityBanner && suggestCity && (
+        <div className="edge-banner edge-banner--action" role="status">
+          <span>{t('switchCityPrompt', { city: suggestCity.name })}</span>
+          <button
+            type="button"
+            className="edge-banner__action"
+            onClick={() => setCurrentCity(suggestCity.code)}
+          >
+            {t('switchCityAction', { city: suggestCity.name })}
+          </button>
+        </div>
       )}
       <BottomSheet
         collapsedLabel={sheetLabel}

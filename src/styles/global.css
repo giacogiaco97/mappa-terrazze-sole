@@ -104,6 +104,43 @@ html, body, #root, .app-root {
     top: 180px;
   }
 }
+
+/* Variante action: banner che propone uno switch (es. cambio città) */
+.edge-banner--action {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg-elev, #ffffff);
+  border: 1px solid var(--brand, #f5a623);
+  color: var(--text);
+  padding: 8px 10px 8px 14px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+.edge-banner--action > span {
+  flex: 1;
+  font-weight: 500;
+}
+.edge-banner__action {
+  appearance: none;
+  flex-shrink: 0;
+  background: var(--brand, #f5a623);
+  color: var(--brand-text, #1a1a1a);
+  border: 0;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font: inherit;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  min-height: 36px;
+  white-space: nowrap;
+}
+.edge-banner__action:hover { filter: brightness(1.05); }
+.edge-banner__action:active { transform: scale(0.97); }
+.edge-banner__action:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
 :root[data-theme='dark'] .edge-banner,
 :root:not([data-theme='light']) .edge-banner {
   /* tema scuro: banner contrastato comunque su giallo chiaro */

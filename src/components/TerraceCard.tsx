@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 import { useStore } from '../store/use-store.js';
 import { googleMapsUrl, streetViewUrl } from '../lib/google-maps.js';
 import { walkingMinutes } from '../lib/walking-time.js';
@@ -37,8 +37,9 @@ export default function TerraceCard() {
   const setSelectedId = useStore((s) => s.setSelectedId);
   const buildingIndex = useStore((s) => s.buildingIndex);
   const weather = useStore((s) => s.weather);
+  const cardRef = useRef<HTMLDivElement>(null);
 
-  useModalDismiss(!!selectedId, () => setSelectedId(null));
+  useModalDismiss(!!selectedId, () => setSelectedId(null), cardRef);
 
   const t1 = useMemo(
     () => (selectedId ? terraces.find((x) => x.id === selectedId) ?? null : null),
@@ -108,10 +109,11 @@ export default function TerraceCard() {
   const rainLabel = rainAhead ? formatTime(new Date(rainAhead.time)) : null;
 
   return (
-    <div className="card" role="dialog" aria-modal="true" aria-labelledby="card-title">
-      <button className="card__close" onClick={() => setSelectedId(null)} aria-label={t('close')}>
-        <span aria-hidden="true">×</span>
-      </button>
+    <div className="card-backdrop" data-modal-backdrop>
+      <div ref={cardRef} className="card" role="dialog" aria-modal="true" aria-labelledby="card-title">
+        <button className="card__close" onClick={() => setSelectedId(null)} aria-label={t('close')}>
+          <span aria-hidden="true">×</span>
+        </button>
 
       <header className={`card__hero card__hero--${status}`}>
         <span className={`card__pill card__pill--${status}`}>
@@ -239,6 +241,7 @@ export default function TerraceCard() {
           <span aria-hidden="true">📍</span>{' '}
           <span>{t('streetViewShort')}</span>
         </a>
+        </div>
       </div>
     </div>
   );

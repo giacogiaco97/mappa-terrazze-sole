@@ -406,3 +406,16 @@
     to { opacity: 1; transform: translateY(0) scale(1); }
   }
 }
+
+/* === Desktop ≥1024px: backdrop esclude la sidebar sinistra, card centrata
+   sulla porzione di mappa visibile. La sidebar resta interattiva. === */
+@media (min-width: 1024px) {
+  .card-backdrop {
+    left: 380px;
+    padding: 32px;
+  }
+  .card {
+    width: 440px;
+    max-height: min(88dvh, 820px);
+  }
+}

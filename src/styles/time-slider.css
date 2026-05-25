@@ -79,3 +79,21 @@
   font-variant-numeric: tabular-nums;
 }
 .time-slider input[type=range] { width: 100%; margin-top: 2px; }
+
+/* === Desktop ≥1024px: TimeSlider centrato sopra la mappa, accanto alla sidebar === */
+@media (min-width: 1024px) {
+  .time-slider {
+    left: 380px;
+    right: 0;
+    top: 16px;
+    max-width: 760px;
+    margin: 0 auto;
+    border-radius: 16px;
+    padding: 10px 16px 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.10);
+    border: 1px solid var(--border);
+  }
+  .time-slider__row { font-size: 14px; }
+  .time-slider__days { gap: 8px; padding: 4px 0; }
+  .time-slider__day { min-width: 76px; padding: 7px 12px; }
+}

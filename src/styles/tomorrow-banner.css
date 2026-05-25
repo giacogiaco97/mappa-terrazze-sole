@@ -45,3 +45,15 @@
 @media (max-width: 360px) {
   .tomorrow-banner { font-size: 12px; padding: 8px 10px 8px 10px; }
 }
+
+/* Desktop: banner centrato sulla zona mappa (a destra della sidebar) */
+@media (min-width: 1024px) {
+  .tomorrow-banner {
+    left: calc(380px + (100% - 380px) / 2);
+    bottom: 24px;
+  }
+  @keyframes tomorrow-rise {
+    from { opacity: 0; transform: translate(-50%, 16px); }
+    to { opacity: 1; transform: translate(-50%, 0); }
+  }
+}

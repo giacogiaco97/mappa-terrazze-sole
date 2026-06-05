@@ -1,6 +1,9 @@
 /**
- * Meteo per Barcellona via Open-Meteo (GRATIS, no API key, CORS aperto).
+ * Meteo via Open-Meteo (GRATIS, no API key, CORS aperto).
  * Cache localStorage 1h per evitare hammering al refresh.
+ *
+ * La cache è per-coordinata: città diverse hanno chiavi diverse, così cambiando
+ * città il meteo si aggiorna invece di restituire quello della città precedente.
  *
  * Endpoint: https://api.open-meteo.com/v1/forecast
  * Doc: https://open-meteo.com/en/docs
@@ -24,9 +27,18 @@ export type Weather = {
   hours: WeatherHour[];
 };
 
-const CACHE_KEY = 'weather-cache-v2';
+const CACHE_PREFIX = 'weather-cache-v3';
 const CACHE_TTL_MS = 60 * 60_000; // 1h
 const ENDPOINT = 'https://api.open-meteo.com/v1/forecast';
+
+/**
+ * Chiave cache per coordinate (arrotondate a ~1km). Bump a v3 per invalidare la
+ * vecchia chiave globale v2 che ignorava lat/lng (bug: cambiando città restava
+ * il meteo della città precedente per 1h).
+ */
+export function weatherCacheKey(lat: number, lng: number): string {
+  return `${CACHE_PREFIX}:${lat.toFixed(2)},${lng.toFixed(2)}`;
+}
 
 type OpenMeteoResponse = {
   hourly: {
@@ -49,9 +61,10 @@ export async function fetchWeather(
   storage: Storage | null = typeof localStorage !== 'undefined' ? localStorage : null,
   fetchImpl: typeof fetch = fetch,
 ): Promise<Weather | null> {
+  const cacheKey = weatherCacheKey(lat, lng);
   if (storage) {
     try {
-      const raw = storage.getItem(CACHE_KEY);
+      const raw = storage.getItem(cacheKey);
       if (raw) {
         const cached = JSON.parse(raw) as Weather;
         if (Date.now() - cached.fetchedAt < CACHE_TTL_MS) return cached;
@@ -73,7 +86,7 @@ export async function fetchWeather(
     }));
     const weather: Weather = { fetchedAt: Date.now(), hours };
     if (storage) {
-      try { storage.setItem(CACHE_KEY, JSON.stringify(weather)); } catch { /* quota */ }
+      try { storage.setItem(cacheKey, JSON.stringify(weather)); } catch { /* quota */ }
     }
     return weather;
   } catch {

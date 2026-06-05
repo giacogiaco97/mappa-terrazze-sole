@@ -176,21 +176,27 @@ export default function Markers({ map }: Props) {
       map.on('mouseleave', clusterLayerId, resetPointer);
     };
 
-    // Robustezza: oltre a 'load' (che NON scatta più dopo il primo load),
-    // ascoltiamo anche 'styledata' che firma ogni volta che lo style è pronto.
-    // Critico per il cambio città dopo la rimozione esplicita delle sorgenti.
-    if (map.isStyleLoaded()) {
-      upsert();
-    } else {
-      const onStyleReady = () => {
-        if (map.isStyleLoaded()) {
-          upsert();
-          map.off('styledata', onStyleReady);
-        }
-      };
-      map.on('styledata', onStyleReady);
-      map.once('load', upsert);
-    }
+    // Readiness robusto: NON ci basiamo su map.isStyleLoaded() né su once('load').
+    // In produzione (service worker + tile lenti, oppure volo verso una città
+    // lontana al cambio città) isStyleLoaded() può restare false a tempo
+    // indefinito ANCHE quando addSource funziona già, e 'load' è scattato una
+    // sola volta al primo render iniziale e non riparte più. Risultato: i marker
+    // non comparivano mai (es. Madrid). Proviamo direttamente l'upsert: se lo
+    // style non è ancora pronto addSource lancia → ritentiamo a ogni 'styledata'
+    // e 'idle' finché non riesce.
+    const tryUpsert = (): boolean => {
+      try { upsert(); return true; } catch { return false; }
+    };
+    if (tryUpsert()) return;
+    const retry = () => {
+      if (tryUpsert()) {
+        map.off('styledata', retry);
+        map.off('idle', retry);
+      }
+    };
+    map.on('styledata', retry);
+    map.on('idle', retry);
+    return () => { map.off('styledata', retry); map.off('idle', retry); };
   }, [map, terraces, states]);
 
   return null;

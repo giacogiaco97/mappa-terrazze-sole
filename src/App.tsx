@@ -110,9 +110,14 @@ export default function App() {
       ]);
       if (cancelled) return;
       setTerraces(list);
-      const b = map.getBounds();
+      // I chunk edifici si calcolano dal CENTRO della città, NON da map.getBounds():
+      // al cambio città il flyTo è asincrono, quindi i bounds puntano ancora alla
+      // città precedente → si chiederebbero chunk con chiavi di griglia sbagliate
+      // (tutti 404) e le ombre risulterebbero vuote (ogni terrazza "al sole").
+      const { lat: cLat, lng: cLng } = cityConf.center;
+      const dLat = 0.045, dLng = 0.05; // ~5 km attorno al centro: copre la vista iniziale
       const cells = cellsForBbox(
-        [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()],
+        [cLng - dLng, cLat - dLat, cLng + dLng, cLat + dLat],
         meta.gridStep,
         300,
       );

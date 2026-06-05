@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import {
   fetchWeather,
+  weatherCacheKey,
   getWeatherAt,
   weatherKind,
   weatherEmoji,
@@ -44,13 +45,26 @@ describe('weather core', () => {
     expect(w!.hours).toHaveLength(3);
     expect(w!.hours[0]!.cloudCover).toBe(10);
     expect(w!.hours[0]!.tempC).toBe(18);
-    expect(storage.getItem('weather-cache-v2')).toContain('tempC');
+    expect(storage.getItem(weatherCacheKey(41.39, 2.165))).toContain('tempC');
+  });
+
+  test('cache key è per-coordinata: città diverse non si sovrascrivono', async () => {
+    const storage = mockStorage();
+    await fetchWeather(41.39, 2.165, 1, storage, mockFetchOK(SAMPLE)); // Barcellona
+    const madCloudy = { ...SAMPLE, hourly: { ...SAMPLE.hourly, cloud_cover: [95, 95, 95] } };
+    await fetchWeather(40.42, -3.70, 1, storage, mockFetchOK(madCloudy)); // Madrid
+    // Le due città hanno chiavi distinte e valori distinti
+    expect(weatherCacheKey(41.39, 2.165)).not.toBe(weatherCacheKey(40.42, -3.70));
+    const bcn = JSON.parse(storage.getItem(weatherCacheKey(41.39, 2.165))!) as Weather;
+    const mad = JSON.parse(storage.getItem(weatherCacheKey(40.42, -3.70))!) as Weather;
+    expect(bcn.hours[0]!.cloudCover).toBe(10);
+    expect(mad.hours[0]!.cloudCover).toBe(95);
   });
 
   test('fetchWeather usa cache se entro 1h', async () => {
     const storage = mockStorage();
     const fresh: Weather = { fetchedAt: Date.now() - 30 * 60_000, hours: [] };
-    storage.setItem('weather-cache-v2', JSON.stringify(fresh));
+    storage.setItem(weatherCacheKey(41.39, 2.165), JSON.stringify(fresh));
     const throwingFetch = (async () => { throw new Error('should not fetch'); }) as typeof fetch;
     const w = await fetchWeather(41.39, 2.165, 1, storage, throwingFetch);
     expect(w).toEqual(fresh);
@@ -59,7 +73,7 @@ describe('weather core', () => {
   test('fetchWeather rifetcha se cache > 1h', async () => {
     const storage = mockStorage();
     const stale: Weather = { fetchedAt: Date.now() - 2 * 60 * 60_000, hours: [] };
-    storage.setItem('weather-cache-v2', JSON.stringify(stale));
+    storage.setItem(weatherCacheKey(41.39, 2.165), JSON.stringify(stale));
     const w = await fetchWeather(41.39, 2.165, 1, storage, mockFetchOK(SAMPLE));
     expect(w!.hours).toHaveLength(3);
   });
